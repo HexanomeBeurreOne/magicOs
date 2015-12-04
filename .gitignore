@@ -33,3 +33,6 @@ build/
 
 # Debug files
 *.dSYM/
+
+#Temporary files
+*~
