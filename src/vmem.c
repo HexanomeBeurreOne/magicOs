@@ -18,6 +18,5 @@ if(adresse_physique < 0x20FFFFFF && adresse_physique > 0x20000000) {
 }
 
 unsigned int init_kern_translation_table(void) {
- 
-
+	
 }
