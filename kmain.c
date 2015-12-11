@@ -22,14 +22,6 @@ void user_process_2()
 	}
 }
 
-void user_process_3()
-{
-	int v3 = 0;
-	while (1)
-	{
-		v3 += 5;
-	}
-}
 
 void kmain()
 {
@@ -37,7 +29,6 @@ void kmain()
 
 	create_process((func_t*)&user_process_1);
 	create_process((func_t*)&user_process_2);
-	create_process((func_t*)&user_process_3);
 
 	// Switch to user mode
 	__asm("cps 0x10");
