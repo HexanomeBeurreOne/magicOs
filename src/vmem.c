@@ -1,19 +1,7 @@
 #include "vmem.h"
+#include "kheap.h"
+#include "config.h"
 
-#define PAGE_SIZE 4096 // 4KB 
-
-#define ENTRY_SIZE 4 //1 case
-
-#define FIRST_LVL_TT_COUN 4096
-#define SECON_LVL_TT_COUN 256
-
-#define FIRST_LVL_TT_SIZE (FIRST_LVL_TT_COUN * ENTRY_SIZE) // 16384
-#define SECON_LVL_TT_SIZE (SECON_LVL_TT_COUN * ENTRY_SIZE) // 1024
-
-#define FIRST_LVL_TABLE_BASE 0X1000000 //start of the user space, end of the kernel heap
-#define SECON_LVL_TABLE_BASE (FIRST_LVL_TABLE_BASE + FIRST_LVL_TT_SIZE)
-
-#define __kernel_heap_end__ 0x10000000
 
 // 9.2
 // 0  (nG : global?)
@@ -28,11 +16,10 @@
  
 // 0b000001110010 
 
-// 9.3
-uint32_t device_flags = 0b000000110110;
+// 9.3 : Bits d'entree tables 2eme niv
+uint32_t device_flags = 0b000001110010;
 
-void 
-vmem_init()
+void vmem_init()
 {
 	init_kern_translation_table();
 	configure_mmu_C();
@@ -41,39 +28,11 @@ vmem_init()
 	start_mmu_C();
 }
 
-void
-start_mmu_C()
-{
-register unsigned int control;
-__asm("mcr p15, 0, %[zero], c1, c0, 0" : : [zero] "r"(0)); //Disable cache
-__asm("mcr p15, 0, r0, c7, c7, 0"); //Invalidate cache (data and instructions) */
-__asm("mcr p15, 0, r0, c8, c7, 0"); //Invalidate TLB entries
-/* Enable ARMv6 MMU features (disable sub-page AP) */
-control = (1<<23) | (1 << 15) | (1 << 4) | 1;
-/* Invalidate the translation lookaside buffer (TLB) */
-__asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
-/* Write control register */
-__asm volatile("mcr p15, 0, %[control], c1, c0, 0" : : [control] "r" (control));
-}
-void
-configure_mmu_C()
-{
-register unsigned int pt_addr = FIRST_LVL_TABLE_BASE;
-//total++; //why?
-/* Translation table 0 */
-__asm volatile("mcr p15, 0, %[addr], c2, c0, 0" : : [addr] "r" (pt_addr));
-/* Translation table 1 */
-__asm volatile("mcr p15, 0, %[addr], c2, c0, 1" : : [addr] "r" (pt_addr));
-/* Use translation table 0 for everything */
-__asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (0));
-/* Set Domain 0 ACL to "Manager", not enforcing memory permissions
-* Every mapped section/page is in domain 0
-*/
-__asm volatile("mcr p15, 0, %[r], c3, c0, 0" : : [r] "r" (0x3));
-}
 
-unsigned int
-init_kern_translation_table(void)
+/**************************************************************************
+9.5	    ALLOCATION PUIS INITIALISATION DE LA TABLE DES PAGES DE L'OS
+**************************************************************************/
+unsigned int init_kern_translation_table(void)
 {
 	int fl_index; //first level index
 	uint32_t * fl_page_entry = (uint32_t*)FIRST_LVL_TABLE_BASE; //first level
@@ -93,7 +52,7 @@ init_kern_translation_table(void)
 			} 
 			else if(physical_addr > 0x20000000 && physical_addr < 0x20FFFFFF)
 			{
-				*sl_page_entry = physical_addr; //| device_flags;
+				*sl_page_entry = physical_addr | device_flags;
 			} 
 			else
 			{
@@ -109,4 +68,40 @@ init_kern_translation_table(void)
 	}
 
  	return 0;
+}
+
+/**************************************
+			ACTIVER LA MMU
+**************************************/
+void start_mmu_C()
+{
+register unsigned int control;
+__asm("mcr p15, 0, %[zero], c1, c0, 0" : : [zero] "r"(0)); //Disable cache
+__asm("mcr p15, 0, r0, c7, c7, 0"); //Invalidate cache (data and instructions) */
+__asm("mcr p15, 0, r0, c8, c7, 0"); //Invalidate TLB entries
+/* Enable ARMv6 MMU features (disable sub-page AP) */
+control = (1<<23) | (1 << 15) | (1 << 4) | 1;
+/* Invalidate the translation lookaside buffer (TLB) */
+__asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
+/* Write control register */
+__asm volatile("mcr p15, 0, %[control], c1, c0, 0" : : [control] "r" (control));
+}
+
+/**************************************
+			CONFIGURER LA MMU
+**************************************/
+void configure_mmu_C()
+{
+register unsigned int pt_addr = FIRST_LVL_TABLE_BASE;
+//total++; //why?
+/* Translation table 0 */
+__asm volatile("mcr p15, 0, %[addr], c2, c0, 0" : : [addr] "r" (pt_addr));
+/* Translation table 1 */
+__asm volatile("mcr p15, 0, %[addr], c2, c0, 1" : : [addr] "r" (pt_addr));
+/* Use translation table 0 for everything */
+__asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (0));
+/* Set Domain 0 ACL to "Manager", not enforcing memory permissions
+* Every mapped section/page is in domain 0
+*/
+__asm volatile("mcr p15, 0, %[r], c3, c0, 0" : : [r] "r" (0x3));
 }

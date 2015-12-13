@@ -14,7 +14,13 @@ static struct pcb_s kmain_process;
 
 void sched_init()
 {
-	vmem_init();
+	//Appel vnem_init
+	#if VNEM
+		vnem_init();
+	#else
+		kheap_init();
+	#endif
+
 	timer_init();
 
 	current_process = &kmain_process;
