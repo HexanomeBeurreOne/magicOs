@@ -15,9 +15,6 @@
 #define SECON_LVL_TT_SIZE  (SECON_LVL_TT_COUN * ENTRY_SIZE) // 1024
 #define SECON_LVL_TT_ALIG 14 //TODO : WHY ?
 
-#define FIRST_LVL_TABLE_BASE 0X1000000 //start of the user space, end of the kernel heap
-#define SECON_LVL_TABLE_BASE (FIRST_LVL_TABLE_BASE + FIRST_LVL_TT_SIZE)
-
 
 extern uint32_t __kernel_heap_end__;
 
