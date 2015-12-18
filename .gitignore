@@ -1,6 +1,9 @@
 # Build Folder
 build/
 
+# Documentation folder
+doc/
+
 # Object files
 *.o
 *.ko
