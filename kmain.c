@@ -34,16 +34,17 @@ void user_process_3()
 
 void test_led()
 {
-	led_blink();
+	hw_init();
+	led_on();
 }
 
 void kmain()
 {
 	sched_init();
 
-	create_process((func_t*)&user_process_1);
-	create_process((func_t*)&user_process_2);
-	create_process((func_t*)&user_process_3);
+	//create_process((func_t*)&user_process_1);
+	//create_process((func_t*)&user_process_2);
+	//create_process((func_t*)&user_process_3);
 	
 	create_process((func_t*)&test_led);
 
