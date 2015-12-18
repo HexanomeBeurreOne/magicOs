@@ -1,6 +1,7 @@
 #include "syscall.h"
 #include "sched.h"
 #include "util.h"
+#include "hw.h"
 
 #define NB_PROCESS 5
 
@@ -31,6 +32,11 @@ void user_process_3()
 	}
 }
 
+void test_led()
+{
+	led_blink();
+}
+
 void kmain()
 {
 	sched_init();
@@ -38,6 +44,8 @@ void kmain()
 	create_process((func_t*)&user_process_1);
 	create_process((func_t*)&user_process_2);
 	create_process((func_t*)&user_process_3);
+	
+	create_process((func_t*)&test_led);
 
 	// Switch to user mode
 	__asm("cps 0x10");
