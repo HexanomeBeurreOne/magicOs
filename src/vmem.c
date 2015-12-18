@@ -17,16 +17,57 @@ void vmem_init()
 
 unsigned int init_kern_translation_table(void)
 {
+
+	int fl_index; //first level index
+	uint32_t * fl_page_entry = (uint32_t*)FIRST_LVL_TABLE_BASE; //first level
+
+
 	// allocate first level table
-	uint32_t** first_level_table = (uint32_t**) kAlloc_aligned(FIRST_LVL_TT_SIZE, FIRST_LVL_TT_ALIG);
+	uint32_t* first_level_table = (uint32_t*) kAlloc_aligned(FIRST_LVL_TT_SIZE, FIRST_LVL_TT_ALIG);
 	// second level table
-	uint32_t* second_level_table;
+	//uint32_t* second_level_table;
 	
 	// allocate second level table
-	uint8_t i;
-	for(i = 0; i < SECON_LVL_TT_COUN; i++)
+	uint32_t virtual_addr;
+	uint32_t first_level_table_index;
+	uint32_t second_level_table;
+	uint32_t second_level_table_index;
+	uint32_t second_level_descriptor;
+
+	for(first_level_table_index = 0; first_level_table_index < FIRST_LVL_TT_COUN; first_level_table_index++)
 	{
-		first_level_table[i] = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
+		if(first_level_table_index < 16 || (first_level_table_index > 512 && first_level_table_index < 528)) {
+			// Allocate the second level table 
+			second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
+			//TODO: Add flags
+
+			// Browse the second level table and populate it with pysical adresses
+			for(second_level_table_index = 0; second_level_table_index < FIRST_LVL_TT_COUN; second_level_table_index++) {
+				//build the physical address base on the virtual one
+				uint32_t physical_addr = ((first_level_table_index<<8) + second_level_table_index) <<12;
+
+				if(physical_addr < __kernel_heap_end__ && physical_addr > 0)
+				{
+					second_level_descriptor = physical_addr;
+					//TODO : ADD FLAGS
+					second_level_table[second_level_table_index] = second_level_descriptor;
+				} 
+				else if(physical_addr > 0x20000000 && physical_addr < 0x20FFFFFF)
+				{
+					*sl_page_entry = physical_addr | device_flags;
+				} 
+				else
+				{
+					*sl_page_entry = 0 ; // translation fault
+				}
+			}
+			first_level_table[first_level_table_index] = (uint32_t)second_level_table; //+flags
+
+		}
+		else {
+			// Translation fault
+			first_level_table[first_level_table_index] = 0;
+		}
 	}
 	
 	uint32_t device_flags = 0b010000010110;
@@ -39,7 +80,7 @@ unsigned int init_kern_translation_table(void)
 		virtual_physical_mirror(virtual_addr, (uint32_t)first_level_table, second_level_table, 0b000001010010);
 	}
 	
-	// initialise memoire peripherique
+	// initialise memoire peripherique 
 	for(virtual_addr = 0x20000000; virtual_addr < 0x20FFFFFF; virtual_addr++)
 	{
 		virtual_physical_mirror(virtual_addr, (uint32_t)first_level_table, second_level_table, device_flags);
@@ -69,7 +110,7 @@ void virtual_physical_mirror(uint32_t virtual_addr, uint32_t first_level_table, 
 	// Puis masque de 8 bits pour retirer first_level_table_index
 	second_level_table_index = (virtual_addr >> 12) & 0xFF;
 	// Masque pour recuperer les 22 premiers bits de first_level_table
-	second_level_table = (uint32_t*)(first_level_descriptor & 0xFFFFFC00);
+	*second_level_table = (uint32_t*)(first_level_descriptor & 0xFFFFFC00);
 	// Construction de second_level_descriptor_address
 	second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index << 2));
 	// Construction de second_level_descriptor pour que virtual_addr == physical_addr

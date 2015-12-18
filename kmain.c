@@ -22,7 +22,6 @@ void user_process_2()
 	}
 }
 
-
 void kmain()
 {
 	sched_init();
