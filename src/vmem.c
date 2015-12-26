@@ -21,6 +21,9 @@
 static unsigned int MMUTABLEBASE;
 
 
+// Indicates available frames
+uint8* frames_occupation_table;
+
 /******************************
 9.6	    
 *******************************/
@@ -103,6 +106,10 @@ void virtual_physical_mirror(uint32_t virtual_addr, uint32_t first_level_table, 
 	*second_level_descriptor_address = (virtual_addr & 0xFFFFF000) | flags;
 }
 
+
+/**************************************************************************
+9.8	    ALLOCATION PUIS INITIALISATION DE LA TABLE DES PAGES DE L'OS
+**************************************************************************/
 
 
 /******************************************************************************

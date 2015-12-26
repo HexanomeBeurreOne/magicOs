@@ -15,6 +15,10 @@
 #define SECON_LVL_TT_SIZE  (SECON_LVL_TT_COUN * ENTRY_SIZE) // 1024
 #define SECON_LVL_TT_ALIG 14 //TODO : WHY ?
 
+//**************************************************** VIRTUAL MEMORY
+#define RAM_SPACE (0x1FFFFFFF + 1) //0x20000000
+#define FRAMES_OCCUPATION_TABLE_SIZE (RAM_SPACE / PAGE_SIZE) //0x20000 = 131072
+
 
 extern uint32_t __kernel_heap_end__;
 
