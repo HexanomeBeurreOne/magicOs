@@ -16,9 +16,16 @@
 #define SECON_LVL_TT_ALIG 14 //TODO : WHY ?
 
 //**************************************************** VIRTUAL MEMORY
-#define RAM_SPACE (0x1FFFFFFF + 1) //0x20000000
-#define FRAMES_OCCUPATION_TABLE_SIZE (RAM_SPACE / PAGE_SIZE) //0x20000 = 131072
+#define FRAME_SIZE 4096
+#define MEMORY_SPACE 0x20FFFFFF
+#define FRAMES_OCCUPATION_TABLE_SIZE (MEMORY_SPACE / FRAME_SIZE) // 135 168
 
+#define frame_kernel_heap_end (__kernel_heap_end__ / FRAME_SIZE)
+#define frame_devices_start (0x20000000 / FRAME_SIZE)
+#define frame_devices_end (0x20FFFFFF / FRAME_SIZE)
+
+#define FRAME_OCCUPIED 1
+#define FRAME_FREE 0
 
 extern uint32_t __kernel_heap_end__;
 
@@ -28,5 +35,7 @@ void vmem_init();
 uint32_t vmem_translate(uint32_t va, struct pcb_s* process);
 void configure_mmu_C();
 void start_mmu_C();
+
+void init_frames_occupation_table(uint32_t FRAMES_OCCUPATION_TABLE_SIZE);
 
 #endif

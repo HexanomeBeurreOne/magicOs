@@ -20,9 +20,8 @@
 // Page table address
 static unsigned int MMUTABLEBASE;
 
-
 // Indicates available frames
-uint8* frames_occupation_table;
+static uint8* frames_occupation_table;
 
 /******************************
 9.6	    
@@ -30,9 +29,10 @@ uint8* frames_occupation_table;
 void vmem_init()
 {
 	kheap_init();
-	MMUTABLEBASE = init_kern_translation_table();
 
-	//config MMU
+	MMUTABLEBASE = init_kern_translation_table();
+	frames_occupation_table = init_frames_occupation_table(FRAMES_OCCUPATION_TABLE_SIZE);
+	
 	configure_mmu_C();
 	//__asm("cps 0b10111");//Activate data abort and interruptions : bit 7-8 of cpsr
 	//TODO Later
@@ -110,7 +110,29 @@ void virtual_physical_mirror(uint32_t virtual_addr, uint32_t first_level_table, 
 /**************************************************************************
 9.8	    ALLOCATION PUIS INITIALISATION DE LA TABLE DES PAGES DE L'OS
 **************************************************************************/
+uint8_t* init_frames_occupation_table(FRAMES_OCCUPATION_TABLE_SIZE)
+{
+	//On alloue la table d'occupation des frames.
+	uint8_t* frames_table = kAlloc(FRAMES_OCCUPATION_TABLE_SIZE);
 
+	//On marque les frames qui sont occupées (1) et celles libres (0)
+	uint32_t i;
+	
+	for (i = 0; i <= frame_kernel_heap_end; i++)
+	{
+		frames_table[i] = FRAME_OCCUPIED;
+	}
+	for (; i < frame_devices_start; i++)
+	{
+		frames_table[i] = FRAME_FREE;
+	}
+	for (i = frame_devices_start; i <= frame_devices_end; i++)
+	{
+		frames_table[i] = FRAME_OCCUPIED;
+	}
+	
+	return frames_table;
+}
 
 /******************************************************************************
 Renvoie une adresse physique a partir d'une adresse virtuelle pour un process
