@@ -23,14 +23,6 @@ void user_process_2()
 	}
 }
 
-void user_process_3()
-{
-	int v3 = 0;
-	while (1)
-	{
-		v3 += 5;
-	}
-}
 
 void test_led()
 {
