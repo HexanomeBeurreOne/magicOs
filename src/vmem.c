@@ -173,6 +173,14 @@ uint32_t get_frame_state(uint32_t frame)
 	return frames_occupation_table[frame];
 }
 
+/**
+* Met à jour l'état d'une frame
+*/
+void set_frame_state(uint32_t frame, int state)
+{
+	frames_occupation_table[frame] = state;
+}
+
 
 /**
 * Renvoie une frame qui est libre

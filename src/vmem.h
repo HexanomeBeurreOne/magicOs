@@ -54,6 +54,11 @@ void free_frames_occupation_table();
 uint32_t get_frame_state(uint32_t frame);
 
 /**
+* Met à jour l'état d'une frame
+*/
+void set_frame_state(uint32_t frame, int state);
+
+/**
 * Renvoie une frame qui est libre
 * ou UINT32_MAX sinon
 */
