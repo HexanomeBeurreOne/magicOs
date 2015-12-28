@@ -12,16 +12,16 @@
 // 0  (C : periph mappé en mém) 
 // 0  (B : periph mappé en mém) 
 // 1  (extended small page)
-// 0  (XN : code non exécutable)
+// 1  (XN : code non exécutable)
  
-// 0b000001110010 
+// 0b000001110011 
 
 
 // Page table address
 static unsigned int MMUTABLEBASE;
 
 // Indicates available frames
-static uint8* frames_occupation_table;
+uint8* frames_occupation_table;
 
 /******************************
 9.6	    
@@ -110,10 +110,13 @@ void virtual_physical_mirror(uint32_t virtual_addr, uint32_t first_level_table, 
 /**************************************************************************
 9.8	    ALLOCATION PUIS INITIALISATION DE LA TABLE DES PAGES DE L'OS
 **************************************************************************/
+/**
+* On utilise la figure 3.4, la partie FREE est grisée
+*/
 uint8_t* init_frames_occupation_table(FRAMES_OCCUPATION_TABLE_SIZE)
 {
 	//On alloue la table d'occupation des frames.
-	uint8_t* frames_table = kAlloc(FRAMES_OCCUPATION_TABLE_SIZE);
+	uint8_t* frames_table = (uint8_t) kAlloc(FRAMES_OCCUPATION_TABLE_SIZE);
 
 	//On marque les frames qui sont occupées (1) et celles libres (0)
 	uint32_t i;
@@ -133,6 +136,35 @@ uint8_t* init_frames_occupation_table(FRAMES_OCCUPATION_TABLE_SIZE)
 	
 	return frames_table;
 }
+
+/**
+* Libère la table d'occupation des frames
+*/
+void free_frames_occupation_table()
+{
+	kFree(frames_occupation_table, FRAMES_OCCUPATION_TABLE_SIZE);
+}
+
+
+/**************************************************************************
+9.11-13			    ALLOUE PLUSIEURS PAGES A UN PROCESS
+***************************************************************************
+ * +size : nb d'octets qu'il faut allouer
+ */
+uint8_t* vmem_alloc_for_userland(struct pcb_s* process, uint32_t size)
+{
+
+	return 0;
+}
+
+
+/**
+*
+*
+*/
+
+
+
 
 /******************************************************************************
 Renvoie une adresse physique a partir d'une adresse virtuelle pour un process

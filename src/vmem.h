@@ -4,8 +4,9 @@
 #include <stdint.h>
 #include "sched.h"
 
+//**************************************************** PAGE TABLE
 #define PAGE_SIZE 4096 // 4KB 
-#define TT_ENTRY_SIZE 4 //1 case
+#define TT_ENTRY_SIZE 4 //1 case = 32 bits
 
 #define FIRST_LVL_TT_COUN 4096
 #define FIRST_LVL_TT_SIZE (FIRST_LVL_TT_COUN * TT_ENTRY_SIZE) // 16384
@@ -15,7 +16,7 @@
 #define SECON_LVL_TT_SIZE  (SECON_LVL_TT_COUN * TT_ENTRY_SIZE) // 1024
 #define SECON_LVL_TT_ALIG 14 //TODO : WHY ?
 
-//**************************************************** VIRTUAL MEMORY
+//**************************************************** FRAME TABLE
 #define FRAME_SIZE 4096
 #define MEMORY_SPACE 0x20FFFFFF
 #define FRAMES_OCCUPATION_TABLE_SIZE (MEMORY_SPACE / FRAME_SIZE) // 135 168
