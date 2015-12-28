@@ -107,6 +107,53 @@ void virtual_physical_mirror(uint32_t virtual_addr, uint32_t first_level_table, 
 }
 
 
+/**
+* Ajoute une frame à la table des pages
+*/
+void add_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_index, uint32_t frame_address)
+{
+	
+}
+
+/**
+* Renvoie la table des pages de second niveau à partir d'un index
+* du premier niveau et d'une table de pages ou l'initialise si elle
+* n'existe pas
+*/
+uint32_t* get_second_level_page_table(uint32_t* page_table, uint32_t fl_index)
+{
+	// tables de niv 1 et 2
+	uint32_t* first_level_page_table;
+	uint32_t* second_level_page_table;
+
+    // cf 9.4 on récupère la Translation base
+    first_level_page_table = page_table & 0xFFFFC000;
+
+    // First level descriptors
+	uint32_t first_level_descriptor;
+    uint32_t* first_level_descriptor_address;
+
+    first_level_descriptor_address = (uint32_t*) (table_base | (first_level_index << 2));
+    first_level_descriptor = *(first_level_descriptor_address);
+
+    /* Translation fault*/
+	if (!(first_level_descriptor & 0x3))  
+	{
+		// Il faut allouer une nouvelle table
+		second_level_page_table = (uint32_t*)kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
+
+		// Initialisons les entrées de la table
+		for (int i = 0; i < SECON_LVL_TT_COUN; ++i)
+		{
+			second_level_page_table[i]=0;
+		}
+	}
+
+	second_level_page_table = (uint32_t*)first_level_descriptor & 0xFFFFFC00;
+
+	return second_level_page_table;
+}
+
 /**************************************************************************
 9.8	    ALLOCATION PUIS INITIALISATION DE LA TABLE DES PAGES DE L'OS
 **************************************************************************/
@@ -176,7 +223,7 @@ uint32_t get_frame_state(uint32_t frame)
 /**
 * Met à jour l'état d'une frame
 */
-void set_frame_state(uint32_t frame, int state)
+void set_frame_state(uint32_t frame, uint8_t state)
 {
 	frames_occupation_table[frame] = state;
 }
@@ -192,7 +239,7 @@ uint32_t find_available_frame()
 
 	for (i = 0; i < FRAMES_OCCUPATION_TABLE_SIZE; ++i)
 	{
-		if (get_frame_state(i)==FRAME_FREE)
+		if (get_frame_state(i) == FRAME_FREE)
 		{
 			return i;
 		}
