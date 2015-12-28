@@ -111,6 +111,7 @@ void virtual_physical_mirror(uint32_t virtual_addr, uint32_t first_level_table, 
 9.8	    ALLOCATION PUIS INITIALISATION DE LA TABLE DES PAGES DE L'OS
 **************************************************************************/
 /**
+* Initialise la table d'occupation des frames
 * On utilise la figure 3.4, la partie FREE est grisée
 */
 uint8_t* init_frames_occupation_table(FRAMES_OCCUPATION_TABLE_SIZE)
@@ -146,9 +147,18 @@ void free_frames_occupation_table()
 }
 
 
+/**
+* Indique si une frame est libre ou non
+*/
+uint32_t get_frame_state(uint32_t frame)
+{
+	return frames_occupation_table[frame];
+}
+
 /**************************************************************************
 9.11-13			    ALLOUE PLUSIEURS PAGES A UN PROCESS
-***************************************************************************
+**************************************************************************/
+/**
  * +size : nb d'octets qu'il faut allouer
  */
 uint8_t* vmem_alloc_for_userland(struct pcb_s* process, uint32_t size)

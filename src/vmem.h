@@ -37,6 +37,22 @@ uint32_t vmem_translate(uint32_t va, struct pcb_s* process);
 void configure_mmu_C();
 void start_mmu_C();
 
+/**
+* Initialise la table d'occupation des frames
+* On utilise la figure 3.4, la partie FREE est grisée
+*/
 void init_frames_occupation_table(uint32_t FRAMES_OCCUPATION_TABLE_SIZE);
+
+/**
+* Libère la table d'occupation des frames
+*/
+void free_frames_occupation_table();
+
+/**
+* Indique si une frame est libre ou non
+*/
+uint32_t get_frame_state(uint32_t frame);
+
+
 
 #endif
