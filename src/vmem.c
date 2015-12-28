@@ -107,13 +107,6 @@ void virtual_physical_mirror(uint32_t virtual_addr, uint32_t first_level_table, 
 }
 
 
-/**
-* Ajoute une frame à la table des pages
-*/
-void add_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_index, uint32_t frame_address)
-{
-	
-}
 
 /**
 * Renvoie la table des pages de second niveau à partir d'un index
@@ -222,6 +215,7 @@ uint32_t get_frame_state(uint32_t frame)
 
 /**
 * Met à jour l'état d'une frame
+* 0 : libre / 1 : occupée
 */
 void set_frame_state(uint32_t frame, uint8_t state)
 {
@@ -249,6 +243,22 @@ uint32_t find_available_frame()
 	return UINT32_MAX;
 }
 
+
+/**
+* Ajoute une frame à la table des pages
+*/
+void add_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_index, uint32_t frame)
+{
+	// On récupère la table de second niveau
+	uint32_t* second_level_page_table = get_second_level_page_table(page_table, fl_index);
+
+	// On ajoute la frame dans la case de niveau 2
+	uint32_t frame_address = (frame * FRAME_SIZE);
+	second_level_page_table[sl_index] = frame_address | SECOND_LVL_FLAGS;
+
+	// On indique que la frame est maintenant occupée
+	set_frame_state(frame, 1);
+}
 
 
 /******************************************************************************
