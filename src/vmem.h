@@ -53,6 +53,11 @@ void free_frames_occupation_table();
 */
 uint32_t get_frame_state(uint32_t frame);
 
+/**
+* Renvoie une frame qui est libre
+* ou UINT32_MAX sinon
+*/
+uint32_t find_available_frame();
 
 
 #endif

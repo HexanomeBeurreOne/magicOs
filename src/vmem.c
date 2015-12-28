@@ -1,7 +1,7 @@
 #include "vmem.h"
 #include "kheap.h"
 #include "config.h"
-
+#include <stdint.h>
 
 // 9.2
 // 0  (nG : global?)
@@ -147,13 +147,6 @@ void free_frames_occupation_table()
 }
 
 
-/**
-* Indique si une frame est libre ou non
-*/
-uint32_t get_frame_state(uint32_t frame)
-{
-	return frames_occupation_table[frame];
-}
 
 /**************************************************************************
 9.11-13			    ALLOUE PLUSIEURS PAGES A UN PROCESS
@@ -168,11 +161,38 @@ uint8_t* vmem_alloc_for_userland(struct pcb_s* process, uint32_t size)
 }
 
 
-/**
-*
-*
-*/
+/**************************************************************************
+			    			FRAMES TABLE HELPERS
+**************************************************************************/
 
+/**
+* Indique si une frame est libre ou non
+*/
+uint32_t get_frame_state(uint32_t frame)
+{
+	return frames_occupation_table[frame];
+}
+
+
+/**
+* Renvoie une frame qui est libre
+* ou UINT32_MAX sinon
+*/
+uint32_t find_available_frame()
+{
+	uint32_t i;
+
+	for (i = 0; i < FRAMES_OCCUPATION_TABLE_SIZE; ++i)
+	{
+		if (get_frame_state(i)==FRAME_FREE)
+		{
+			return i;
+		}
+	}
+
+	//Aucune frame n'est libre
+	return UINT32_MAX;
+}
 
 
 
