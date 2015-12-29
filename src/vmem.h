@@ -53,6 +53,20 @@ void virtual_physical_mirror(uint32_t virtual_addr, uint32_t first_level_table, 
 uint32_t* get_second_level_page_table(uint32_t* page_table, uint32_t fl_index);
 
 
+/**
+* Trouve un espace contigue de blocs libres parmi toutes les pages virtuelles
+* possible sur 32 bits et renvoie le num de la premiere page de l'espace trouvé
+* renvoie uint32_max si impossible
+*/
+uint32_t find_contiguous_space_page_table(uint32_t* page_table, uint32_t nb_page);
+
+/**
+* Indique si la page virtuelle est dispo pour une table de page donnée
+* renvoie 1 si libre, 0 sinon
+*/
+int is_available(uint32_t* page_table, uint32_t first_level_index, uint32_t second_level_index);
+
+
 uint32_t vmem_translate(uint32_t va, struct pcb_s* process);
 
 void configure_mmu_C();

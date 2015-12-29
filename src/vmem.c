@@ -147,6 +147,66 @@ uint32_t* get_second_level_page_table(uint32_t* page_table, uint32_t fl_index)
 	return second_level_page_table;
 }
 
+
+/**
+* Trouve un espace contigue de blocs libres parmi toutes les pages virtuelles
+* possible sur 32 bits et renvoie le num de la premiere page de l'espace trouvé
+* renvoie uint32_max si impossible
+*/
+uint32_t find_contiguous_space_page_table(uint32_t* page_table, uint32_t nb_page)
+{
+	const uint32_t MAX_PAGE = UINT32_MAX / PAGE_SIZE;
+
+	uint32_t current_contiguous_pages = 0;
+
+	uint32_t first_level_index;
+	uint32_t second_level_index;
+
+	for (int page_i = 0; page_i < MAX_PAGE; ++page_i)
+	{
+		// On récupère les indexes
+		first_level_index = page_i / SECOND_LVL_TT_COUNT;
+		second_level_index = page_i - first_level_index * SECOND_LVL_TT_COUNT;
+
+		if (is_available(page_table, first_level_index, second_level_index))
+        {
+            current_contiguous_pages++;
+        }
+        else
+        {
+            current_contiguous_pages = 0;
+        }
+
+        // On a le bon espace contigue
+        if (current_contiguous_pages >= nb_page)
+        {
+            return page_i + 1 - nb_page;
+        }
+	}
+
+	// Il est impossible de trouver un tel espace !
+	return UINT32_MAX;
+}
+
+
+/**
+* Indique si la page virtuelle est dispo pour une table de page donnée
+* renvoie 1 si libre, 0 sinon
+*/
+int is_available(uint32_t* page_table, uint32_t first_level_index, uint32_t second_level_index)
+{
+	uint32_t* second_level_table = get_second_level_page_table(page_table, first_level_index);
+
+	if(second_level_table[second_level_index] != 0)
+	{
+		// occupée
+		return 0;
+	}
+
+	// page libre !
+	return 1;
+}
+
 /**************************************************************************
 9.8	    ALLOCATION PUIS INITIALISATION DE LA TABLE DES PAGES DE L'OS
 **************************************************************************/
