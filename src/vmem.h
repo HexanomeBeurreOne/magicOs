@@ -59,7 +59,7 @@ uint32_t* get_second_level_page_table(uint32_t* page_table, uint32_t fl_index);
 * possible sur 32 bits et renvoie le num de la premiere page de l'espace trouvé
 * renvoie uint32_max si impossible
 */
-uint32_t find_contiguous_space_page_table(uint32_t* page_table, uint32_t nb_page);
+uint32_t find_contiguous_pages(uint32_t* page_table, uint32_t nb_page);
 
 /**
 * Indique si la page virtuelle est dispo pour une table de page donnée

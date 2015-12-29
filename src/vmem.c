@@ -156,7 +156,7 @@ uint32_t* get_second_level_page_table(uint32_t* page_table, uint32_t fl_index)
 * possible sur 32 bits et renvoie le num de la premiere page de l'espace trouvé
 * renvoie uint32_max si impossible
 */
-uint32_t find_contiguous_space_page_table(uint32_t* page_table, uint32_t nb_page)
+uint32_t find_contiguous_pages(uint32_t* page_table, uint32_t nb_page)
 {
 	const uint32_t MAX_PAGE = UINT32_MAX / PAGE_SIZE;
 
@@ -259,8 +259,51 @@ void free_frames_occupation_table()
  */
 uint8_t* vmem_alloc_for_userland(struct pcb_s* process, uint32_t size)
 {
+	uint32_t first_level_index;
+	uint32_t second_level_index;
 
-	return 0;
+	uint32_t frame;
+
+	// Nb de pages nécessaire arrondi au nb supérieur
+	uint32_t nb_page = ((size - 1) / PAGE_SIZE) + 1;
+
+	// On cherche un espace contigue correspondant
+	uint32_t contiguous_pages = find_contiguous_pages(*(process->page_table), nb_page);
+
+	if (contiguous_pages < UINT32_MAX)
+	{
+		// Espace trouvé !
+
+		// On alloue une frame pour chaque page
+		for (uint32_t page_i = contiguous_pages; page_i < (contiguous_pages + nb_page); ++page_i)
+		{
+			frame = find_available_frame();
+			if (frame != UINT32_MAX)
+			{
+				// frame dispo !
+				first_level_index = page_i / SECOND_LVL_TT_COUNT;
+				second_level_index = page_i - first_level_index * SECOND_LVL_TT_COUNT;
+
+				// Ajout de l'adresse de la frame
+				add_frame_page_table(page_table, first_level_index, second_level_index, frame);
+
+			}
+			else
+			{
+				// NO MORE RAM
+				// TODO libérer la mémoire
+				PANIC();
+			}
+		}
+
+	}
+	else
+	{
+		// pas d'espace contigu assez grand
+		return 0;
+	}
+
+	return (uint8*)(contiguous_pages * PAGE_SIZE);
 }
 
 
