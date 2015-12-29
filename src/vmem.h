@@ -17,6 +17,7 @@
 #define SECON_LVL_TT_ALIG 14 //TODO : WHY ?
 
 //****** FLAGS
+#define FIRST_LVL_FLAGS 0x1
 #define SECOND_LVL_FLAGS 0x52
 
 //**************************************************** FRAME TABLE

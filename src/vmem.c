@@ -126,7 +126,7 @@ uint32_t* get_second_level_page_table(uint32_t* page_table, uint32_t fl_index)
 	uint32_t first_level_descriptor;
     uint32_t* first_level_descriptor_address;
 
-    first_level_descriptor_address = (uint32_t*) (table_base | (first_level_index << 2));
+    first_level_descriptor_address = (uint32_t*) (first_level_page_table | (fl_index << 2));
     first_level_descriptor = *(first_level_descriptor_address);
 
     /* Translation fault*/
@@ -140,6 +140,9 @@ uint32_t* get_second_level_page_table(uint32_t* page_table, uint32_t fl_index)
 		{
 			second_level_page_table[i]=0;
 		}
+
+		// On indique l'emplacement de cette nouvelle table au 1er niveau
+		page_table[fl_index] = (uint32_t)second_level_page_table | FIRST_LVL_FLAGS;
 	}
 
 	second_level_page_table = (uint32_t*)first_level_descriptor & 0xFFFFFC00;
