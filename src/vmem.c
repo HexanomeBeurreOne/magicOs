@@ -18,8 +18,8 @@ void vmem_init()
 unsigned int init_kern_translation_table(void)
 {
 
-	//uint32_t DEVICE_FLAGS = 0b010000010110;
-	//uint32_t KERNEL_FLAGS = 0b000001010010;
+	uint32_t DEVICE_FLAGS = 0b010000010110;
+	uint32_t KERNEL_FLAGS = 0b000001010010;
 
 	// int fl_index; //first level index
 	// uint32_t * fl_page_entry = (uint32_t*)FIRST_LVL_TABLE_BASE; //first level
@@ -43,7 +43,6 @@ unsigned int init_kern_translation_table(void)
 		if(first_level_table_index < 16) {
 			// Allocate the second level table but not attached to table 1 for now 
 			second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
-			//TODO: Add flags
 
 			// Browse the second level table and populate it with pysical adresses
 			for(second_level_table_index = 0; second_level_table_index < FIRST_LVL_TT_COUN; second_level_table_index++) {
@@ -53,7 +52,8 @@ unsigned int init_kern_translation_table(void)
 				if(physical_addr < __kernel_heap_end__ && physical_addr > 0)
 				{
 					second_level_descriptor = physical_addr;
-					//TODO : ADD KERNEL FLAGS 
+					//ADD KERNEL FLAGS 
+					second_level_descriptor = (second_level_descriptor<<12) + KERNEL_FLAGS;
 					second_level_table[second_level_table_index] = second_level_descriptor;
 				}
 				else
@@ -68,7 +68,6 @@ unsigned int init_kern_translation_table(void)
 		else if(first_level_table_index > 512 && first_level_table_index < 528) {
 			// Allocate the second level table but not attached to table 1 for now 
 			second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
-			//TODO: Add flags
 
 			// Browse the second level table and populate it with pysical adresses
 			for(second_level_table_index = 0; second_level_table_index < FIRST_LVL_TT_COUN; second_level_table_index++) {
@@ -78,7 +77,8 @@ unsigned int init_kern_translation_table(void)
 				if(physical_addr > 0x20000000 && physical_addr < 0x20FFFFFF)
 				{
 					second_level_descriptor = physical_addr;
-					//TODO : ADD DEVICES FLAGS
+					//ADD DEVICES FLAGS
+					second_level_descriptor = (second_level_descriptor<<12) + DEVICE_FLAGS;
 					second_level_table[second_level_table_index] = second_level_descriptor;
 				} 
 				else
