@@ -20,6 +20,8 @@ b *sys_exit
 b *user_process_1
 b *user_process_2
 
+b vmem.c:81
+
 source utils.gdb
 
 continue

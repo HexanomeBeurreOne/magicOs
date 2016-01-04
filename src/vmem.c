@@ -18,8 +18,11 @@ void vmem_init()
 unsigned int init_kern_translation_table(void)
 {
 
-	int fl_index; //first level index
-	uint32_t * fl_page_entry = (uint32_t*)FIRST_LVL_TABLE_BASE; //first level
+	//uint32_t DEVICE_FLAGS = 0b010000010110;
+	//uint32_t KERNEL_FLAGS = 0b000001010010;
+
+	// int fl_index; //first level index
+	// uint32_t * fl_page_entry = (uint32_t*)FIRST_LVL_TABLE_BASE; //first level
 
 
 	// allocate first level table
@@ -28,16 +31,18 @@ unsigned int init_kern_translation_table(void)
 	//uint32_t* second_level_table;
 	
 	// allocate second level table
-	uint32_t virtual_addr;
+	//uint32_t virtual_addr;
 	uint32_t first_level_table_index;
-	uint32_t second_level_table;
+	uint32_t* second_level_table;
 	uint32_t second_level_table_index;
 	uint32_t second_level_descriptor;
 
 	for(first_level_table_index = 0; first_level_table_index < FIRST_LVL_TT_COUN; first_level_table_index++)
 	{
-		if(first_level_table_index < 16 || (first_level_table_index > 512 && first_level_table_index < 528)) {
-			// Allocate the second level table 
+		// if we are between 0x0 and 0x1000000 or between 0x2000000 and 0x20FFFFFF
+		// || (first_level_table_index > 512 && first_level_table_index < 528)
+		if(first_level_table_index < 16) {
+			// Allocate the second level table but not attached to table 1 for now 
 			second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
 			//TODO: Add flags
 
@@ -49,19 +54,22 @@ unsigned int init_kern_translation_table(void)
 				if(physical_addr < __kernel_heap_end__ && physical_addr > 0)
 				{
 					second_level_descriptor = physical_addr;
-					//TODO : ADD FLAGS
+					//TODO : ADD KERNEL FLAGS 
 					second_level_table[second_level_table_index] = second_level_descriptor;
 				} 
 				else if(physical_addr > 0x20000000 && physical_addr < 0x20FFFFFF)
 				{
-					*sl_page_entry = physical_addr | device_flags;
+					second_level_descriptor = physical_addr;
+					//TODO : ADD DEVICES FLAGS
+					second_level_table[second_level_table_index] = second_level_descriptor;
 				} 
 				else
 				{
-					*sl_page_entry = 0 ; // translation fault
+					second_level_table[second_level_table_index] = 0;
 				}
 			}
-			first_level_table[first_level_table_index] = (uint32_t)second_level_table; //+flags
+			//TODO : ADD FIRST LEVEL TABLE FLAGS TO second_level_table
+			first_level_table[first_level_table_index] = (uint32_t)second_level_table;
 
 		}
 		else {
@@ -70,53 +78,8 @@ unsigned int init_kern_translation_table(void)
 		}
 	}
 	
-	uint32_t device_flags = 0b010000010110;
-	
-	uint32_t virtual_addr;
-	
-	// initialise memoire noyau
-	for (virtual_addr = 0; virtual_addr < 0x1000000; virtual_addr++) // TODO 0x1000000 ==? __kernel_heap_end__
-	{
-		virtual_physical_mirror(virtual_addr, (uint32_t)first_level_table, second_level_table, 0b000001010010);
-	}
-	
-	// initialise memoire peripherique 
-	for(virtual_addr = 0x20000000; virtual_addr < 0x20FFFFFF; virtual_addr++)
-	{
-		virtual_physical_mirror(virtual_addr, (uint32_t)first_level_table, second_level_table, device_flags);
-	}
 	return (unsigned int)first_level_table;
 }
-
-void virtual_physical_mirror(uint32_t virtual_addr, uint32_t first_level_table, uint32_t* second_level_table, uint32_t flags) {
-	// Indexes
-	uint32_t first_level_table_index;
-	uint32_t second_level_table_index;
-	// Desc
-	uint32_t first_level_descriptor;
-	uint32_t* first_level_descriptor_address;
-	//uint32_t second_level_descriptor;
-	uint32_t* second_level_descriptor_address;
-	
-	//Decalage de 20 bits pour recuperer first_level_table_index
-	first_level_table_index = virtual_addr >> 20;
-	//Construction du first_level_descriptor_address par concatenation, ajout de 00 a la fin
-	first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index << 2));
-	
-	first_level_descriptor = *(first_level_descriptor_address);
-	
-	// On recupere second_level_table_index
-	// Decalage de 12 bits pour retirer page index
-	// Puis masque de 8 bits pour retirer first_level_table_index
-	second_level_table_index = (virtual_addr >> 12) & 0xFF;
-	// Masque pour recuperer les 22 premiers bits de first_level_table
-	*second_level_table = (uint32_t*)(first_level_descriptor & 0xFFFFFC00);
-	// Construction de second_level_descriptor_address
-	second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index << 2));
-	// Construction de second_level_descriptor pour que virtual_addr == physical_addr
-	*second_level_descriptor_address = (virtual_addr & 0xFFFFF000) | flags;
-}
-
 
 
 uint32_t vmem_translate(uint32_t va, struct pcb_s* process)
