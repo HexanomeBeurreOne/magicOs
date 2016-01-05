@@ -87,6 +87,19 @@ uint8_t* init_frames_occupation_table();
 */
 void free_frames_occupation_table();
 
+/**************************************************************************
+9.11-13			    ALLOUE PLUSIEURS PAGES A UN PROCESS
+**************************************************************************/
+/**
+ * +size : nb d'octets qu'il faut allouer
+ */
+uint8_t* vmem_alloc_for_userland(struct pcb_s* process, unsigned int size);
+
+/**
+ * Libère les pages allouées par vmem_alloc_for_userland
+ */
+void vmem_free(uint8_t* vAddress, struct pcb_s* process, unsigned int size);
+
 /**
 * Indique si une frame est libre ou non
 */
@@ -100,7 +113,7 @@ void set_frame_state(uint32_t frame, uint8_t state);
 /**
 * Calcule le nombre de pages nécessaires pour une taille donnée
 */
-uint32_t get_nb_page(uint32_t size);
+uint32_t get_nb_page(unsigned int size);
 
 /**
 * Renvoie une frame qui est libre
@@ -118,5 +131,11 @@ uint32_t* list_available_frames(uint32_t nb_page);
 * Ajoute une frame à la table des pages
 */
 void add_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_index, uint32_t frame);
+
+
+/**
+* Retire une frame à la table des pages
+*/
+void remove_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_index);
 
 #endif

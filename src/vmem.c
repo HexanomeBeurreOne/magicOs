@@ -180,7 +180,7 @@ uint32_t find_contiguous_pages(uint32_t* page_table, uint32_t nb_page)
             current_contiguous_pages = 0;
         }
 
-        // On a le bon espace contigue
+        // On a le bon espace contigu
         if (current_contiguous_pages >= nb_page)
         {
             return page_i + 1 - nb_page;
@@ -257,7 +257,7 @@ void free_frames_occupation_table()
 /**
  * +size : nb d'octets qu'il faut allouer
  */
-uint8_t* vmem_alloc_for_userland(struct pcb_s* process, uint32_t size)
+uint8_t* vmem_alloc_for_userland(struct pcb_s* process, unsigned int size)
 {
 	uint32_t first_level_index;
 	uint32_t second_level_index;
@@ -308,6 +308,29 @@ uint8_t* vmem_alloc_for_userland(struct pcb_s* process, uint32_t size)
 	return (uint8_t*)(contiguous_pages * PAGE_SIZE);
 }
 
+/**
+ * Libère les pages allouées par vmem_alloc_for_userland
+ */
+void vmem_free(uint8_t* vAddress, struct pcb_s* process, unsigned int size)
+{
+	uint32_t first_level_index;
+	uint32_t second_level_index;
+
+	//Calculons le nombre de pages et frames à libérer
+	uint32_t nb_page = get_nb_page(size);
+
+	uint32_t contiguous_pages = (uint32_t)(*vAddress / PAGE_SIZE);
+	for (uint32_t page_i = contiguous_pages; page_i < (contiguous_pages + nb_page); ++page_i)
+	{
+		// On récupère les indexes de la page
+		first_level_index = page_i / SECON_LVL_TT_COUN;
+		second_level_index = page_i - first_level_index * SECON_LVL_TT_COUN;
+
+		// On libère l'entrée correpondante
+		remove_frame_page_table(*(process->page_table), first_level_index, second_level_index);
+	}
+}
+
 
 /**************************************************************************
 			    			FRAMES TABLE HELPERS
@@ -333,9 +356,9 @@ void set_frame_state(uint32_t frame, uint8_t state)
 /**
 * Calcule le nombre de pages nécessaires pour une taille donnée
 */
-uint32_t get_nb_page(uint32_t size)
+uint32_t get_nb_page(unsigned int size)
 {
-	return ((size - 1) / PAGE_SIZE) + 1;
+	return (((uint32_t)size - 1) / PAGE_SIZE) + 1;
 }
 
 
@@ -404,6 +427,13 @@ void add_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_i
 	set_frame_state(frame, 1);
 }
 
+/**
+* Retire une frame à la table des pages
+*/
+void remove_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_index)
+{
+	
+}
 
 /******************************************************************************
 Renvoie une adresse physique a partir d'une adresse virtuelle pour un process
