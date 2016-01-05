@@ -54,7 +54,7 @@ void create_process_with_priority(func_t* entry, int priority)
 	struct pcb_s* previousProcess;
 	switch(scheduling_type) {
 		case ROUND_ROBIN:
-			previousProcess = &kmain_process->previous
+			previousProcess = kmain_process.previous;
 		break;
 		default:
 			previousProcess = &kmain_process;
@@ -63,8 +63,8 @@ void create_process_with_priority(func_t* entry, int priority)
 			}
 	}
 
-	previousProcess->next->previous = process
-	process->next = previousProcess->next
+	previousProcess->next->previous = process;
+	process->next = previousProcess->next;
 	previousProcess->next = process;
 	process->previous = previousProcess;
 
