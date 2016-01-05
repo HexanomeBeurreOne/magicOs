@@ -80,7 +80,7 @@ void start_mmu_C();
 * Initialise la table d'occupation des frames
 * On utilise la figure 3.4, la partie FREE est grisée
 */
-void init_frames_occupation_table(uint32_t FRAMES_OCCUPATION_TABLE_SIZE);
+uint8_t* init_frames_occupation_table();
 
 /**
 * Libère la table d'occupation des frames
@@ -106,6 +106,6 @@ uint32_t find_available_frame();
 /**
 * Ajoute une frame à la table des pages
 */
-void add_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_index, uint32_t frame)
+void add_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_index, uint32_t frame);
 
 #endif

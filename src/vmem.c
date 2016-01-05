@@ -21,7 +21,7 @@
 static unsigned int MMUTABLEBASE;
 
 // Indicates available frames
-uint8* frames_occupation_table;
+uint8_t* frames_occupation_table;
 
 /******************************
 9.6	    
@@ -31,7 +31,7 @@ void vmem_init()
 	kheap_init();
 
 	MMUTABLEBASE = init_kern_translation_table();
-	frames_occupation_table = init_frames_occupation_table(FRAMES_OCCUPATION_TABLE_SIZE);
+	frames_occupation_table = init_frames_occupation_table();
 	
 	configure_mmu_C();
 	//__asm("cps 0b10111");//Activate data abort and interruptions : bit 7-8 of cpsr
@@ -120,13 +120,13 @@ uint32_t* get_second_level_page_table(uint32_t* page_table, uint32_t fl_index)
 	uint32_t* second_level_page_table;
 
     // cf 9.4 on récupère la Translation base
-    first_level_page_table = page_table & 0xFFFFC000;
+    first_level_page_table = (uint32_t*) (*page_table & 0xFFFFC000);
 
     // First level descriptors
 	uint32_t first_level_descriptor;
     uint32_t* first_level_descriptor_address;
 
-    first_level_descriptor_address = (uint32_t*) (first_level_page_table | (fl_index << 2));
+    first_level_descriptor_address = (uint32_t*) (*first_level_page_table | (fl_index << 2));
     first_level_descriptor = *(first_level_descriptor_address);
 
     /* Translation fault*/
@@ -145,7 +145,7 @@ uint32_t* get_second_level_page_table(uint32_t* page_table, uint32_t fl_index)
 		page_table[fl_index] = (uint32_t)second_level_page_table | FIRST_LVL_FLAGS;
 	}
 
-	second_level_page_table = (uint32_t*)first_level_descriptor & 0xFFFFFC00;
+	second_level_page_table = (uint32_t*) (first_level_descriptor & 0xFFFFFC00);
 
 	return second_level_page_table;
 }
@@ -168,8 +168,8 @@ uint32_t find_contiguous_pages(uint32_t* page_table, uint32_t nb_page)
 	for (int page_i = 0; page_i < MAX_PAGE; ++page_i)
 	{
 		// On récupère les indexes
-		first_level_index = page_i / SECOND_LVL_TT_COUNT;
-		second_level_index = page_i - first_level_index * SECOND_LVL_TT_COUNT;
+		first_level_index = page_i / SECON_LVL_TT_COUN;
+		second_level_index = page_i - first_level_index * SECON_LVL_TT_COUN;
 
 		if (is_available(page_table, first_level_index, second_level_index))
         {
@@ -217,10 +217,10 @@ int is_available(uint32_t* page_table, uint32_t first_level_index, uint32_t seco
 * Initialise la table d'occupation des frames
 * On utilise la figure 3.4, la partie FREE est grisée
 */
-uint8_t* init_frames_occupation_table(FRAMES_OCCUPATION_TABLE_SIZE)
+uint8_t* init_frames_occupation_table()
 {
 	//On alloue la table d'occupation des frames.
-	uint8_t* frames_table = (uint8_t) kAlloc(FRAMES_OCCUPATION_TABLE_SIZE);
+	uint8_t* frames_table = (uint8_t*) kAlloc(FRAMES_OCCUPATION_TABLE_SIZE);
 
 	//On marque les frames qui sont occupées (1) et celles libres (0)
 	uint32_t i;
@@ -281,18 +281,18 @@ uint8_t* vmem_alloc_for_userland(struct pcb_s* process, uint32_t size)
 			if (frame != UINT32_MAX)
 			{
 				// frame dispo !
-				first_level_index = page_i / SECOND_LVL_TT_COUNT;
-				second_level_index = page_i - first_level_index * SECOND_LVL_TT_COUNT;
+				first_level_index = page_i / SECON_LVL_TT_COUN;
+				second_level_index = page_i - first_level_index * SECON_LVL_TT_COUN;
 
 				// Ajout de l'adresse de la frame
-				add_frame_page_table(page_table, first_level_index, second_level_index, frame);
+				add_frame_page_table(*(process->page_table), first_level_index, second_level_index, frame);
 
 			}
 			else
 			{
 				// NO MORE RAM
 				// TODO libérer la mémoire
-				PANIC();
+				
 			}
 		}
 
@@ -303,7 +303,7 @@ uint8_t* vmem_alloc_for_userland(struct pcb_s* process, uint32_t size)
 		return 0;
 	}
 
-	return (uint8*)(contiguous_pages * PAGE_SIZE);
+	return (uint8_t*)(contiguous_pages * PAGE_SIZE);
 }
 
 
