@@ -20,7 +20,9 @@ b *sys_exit
 b *user_process_1
 b *user_process_2
 
-b vmem.c:81
+b vmem.c:99
+
+b sched.c:18
 
 source utils.gdb
 
