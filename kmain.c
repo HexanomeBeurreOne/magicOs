@@ -23,14 +23,6 @@ void user_process_2()
 	}
 }
 
-void user_process_3()
-{
-	int v3 = 0;
-	while (1)
-	{
-		v3 += 5;
-	}
-}
 
 void test_led()
 {
@@ -41,7 +33,7 @@ void test_led()
 void kmain()
 {
 	sched_init();
-
+	
 	//create_process((func_t*)&user_process_1);
 	//create_process((func_t*)&user_process_2);
 	//create_process((func_t*)&user_process_3);

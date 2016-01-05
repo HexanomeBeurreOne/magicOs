@@ -13,16 +13,19 @@ kernel_for_sdcard: kernel_for_qemu build/kernel.img
 remake: clean all
 
 # options à passer au compilateur C
-CFLAGS=-Wall -Werror -nostdlib -nostartfiles -ffreestanding -std=c99 -g -fomit-frame-pointer -nostartfiles -O0 -fdiagnostics-show-option
+CFLAGS=-Wall -nostdlib -nostartfiles -ffreestanding -std=c99 -g -fomit-frame-pointer -nostartfiles -O0 -fdiagnostics-show-option 
 
 # options à passer à la fois au compilateur C et à l'assembleur
-COMMON_FLAGS=-mcpu=arm1176jzf-s
+COMMON_FLAGS=-mcpu=arm1176jzf-s -mfloat-abi=soft -mfpu=fpv4-sp-d16
 
 # Object files (excluding kmain)
 OBJECTS=$(addsuffix .o,  $(addprefix build/, $(basename $(notdir $(wildcard src/*.[cs])))))
 
 # non-default usage: "make KMAIN=test/my-kmain.c" 
 KMAIN ?= ./kmain.c
+
+# The names of libraries to use.
+LIBRARIES := csud
 
 # check whether kmain does exists. typically this would get triggered
 # by a command like "make KMAIN=" (i.e. with no value for KMAIN)
@@ -56,7 +59,7 @@ build/%.o: src/%.s | build
 
 # édition de liens
 build/kernel.elf: $(OBJECTS) build/kmain.o
-	arm-none-eabi-ld $^ -o $@ -T src/sysif.ld -Map build/mapfile.map
+	arm-none-eabi-ld $^ -o $@ -T src/sysif.ld -L./lib/ $(patsubst %,-l %,$(LIBRARIES)) -Map build/mapfile.map 
 
 # conversion de l'image pour transfert sur carte SD
 build/kernel.img: build/kernel.elf

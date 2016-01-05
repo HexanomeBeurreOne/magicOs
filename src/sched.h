@@ -24,6 +24,7 @@ struct pcb_s
 
 	int status;
 	int return_code;
+	uint32_t** page_table;
 	
 	struct pcb_s* next;
 	struct pcb_s* previous;
