@@ -20,6 +20,7 @@ void sched_init()
 	current_process->next = current_process;
 	current_process->previous = current_process;
 	current_process->status = RUNNING;
+	current_process->priority = 0;
 
 	ENABLE_IRQ();
 }
@@ -32,17 +33,25 @@ static void start_current_process()
 
 void create_process(func_t* entry)
 {
+	create_process_with_priority(entry, 0);
+}
+
+void create_process_with_priority(func_t* entry, int priority)
+{
 	struct pcb_s* process = (struct pcb_s*)kAlloc(sizeof(struct pcb_s));
 	process->entry = entry;
 	process->lr_svc = (uint32_t)&start_current_process;
+	process->priority = priority;
 
 	// Allocate stack
 	process->sp_user = (uint32_t*)kAlloc(STACK_SIZE) + STACK_SIZE;
 
 	__asm("mrs %0, cpsr" : "=r"(process->cpsr_user)); // TODO : pourquoi nécessaire d'initialiser CPSR
 
-	// Put the next process at the end of the list
-	struct pcb_s* lastProcess = current_process;
+	// Put the next process at the right place in the list according to its priority
+	struct pcb_s* previousProcess = &kmain_process;
+// TODO
+// pb de trier par priorité si on utilise un round robin ?
 	while (lastProcess->next != &kmain_process)
 	{
 		lastProcess = lastProcess->next;

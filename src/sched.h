@@ -24,6 +24,7 @@ struct pcb_s
 
 	int status;
 	int return_code;
+	int priority;
 	
 	struct pcb_s* next;
 	struct pcb_s* previous;
@@ -31,5 +32,6 @@ struct pcb_s
 
 void sched_init();
 void create_process(func_t* entry);
+void create_process_with_priority(func_t* entry, int priority);
 
 #endif // __SCHED__

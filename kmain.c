@@ -32,23 +32,24 @@ void user_process_3()
 	}
 }
 
-void test_led()
-{
-	hw_init();
-	led_on();
-}
-
 void kmain()
 {
 	sched_init();
 
+	// Selection priorités fixes ou dynamiques
+	// TODO
+
+	// Priorité par défaut : 0
 	//create_process((func_t*)&user_process_1);
 	//create_process((func_t*)&user_process_2);
 	//create_process((func_t*)&user_process_3);
-	
-	create_process((func_t*)&test_led);
 
-	// Switch to user mode
+	// Processus avec priorité
+	create_process_with_priority((func_t*)&user_process_1, 3);
+	create_process_with_priority((func_t*)&user_process_2, 1);
+	create_process_with_priority((func_t*)&user_process_3, 4);
+
+	// Switch CPU to USER mode
 	__asm("cps 0x10");
 
 	while (1)
