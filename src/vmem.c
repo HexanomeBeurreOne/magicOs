@@ -35,6 +35,7 @@ void vmem_init()
 unsigned int init_kern_translation_table(void)
 {
 	int fl_index; //first level index
+	int fl_flags = 0; //first level index
 	uint32_t * fl_page_entry = (uint32_t*)FIRST_LVL_TABLE_BASE; //first level
 
 	for(fl_index = 0 ; fl_index < FIRST_LVL_TT_COUN ; fl_index++)
