@@ -263,7 +263,7 @@ uint8_t* vmem_alloc_for_userland(struct pcb_s* process, uint32_t size)
 	uint32_t second_level_index;
 
 	// Nb de pages nécessaire arrondi au nb supérieur
-	uint32_t nb_page = ((size - 1) / PAGE_SIZE) + 1;
+	uint32_t nb_page = get_nb_page(size);
 
 	uint32_t* frame_available_list;
 
@@ -328,6 +328,14 @@ uint32_t get_frame_state(uint32_t frame)
 void set_frame_state(uint32_t frame, uint8_t state)
 {
 	frames_occupation_table[frame] = state;
+}
+
+/**
+* Calcule le nombre de pages nécessaires pour une taille donnée
+*/
+uint32_t get_nb_page(uint32_t size)
+{
+	return ((size - 1) / PAGE_SIZE) + 1;
 }
 
 

@@ -98,6 +98,11 @@ uint32_t get_frame_state(uint32_t frame);
 void set_frame_state(uint32_t frame, uint8_t state);
 
 /**
+* Calcule le nombre de pages nécessaires pour une taille donnée
+*/
+uint32_t get_nb_page(uint32_t size);
+
+/**
 * Renvoie une frame qui est libre
 * ou UINT32_MAX sinon
 */
