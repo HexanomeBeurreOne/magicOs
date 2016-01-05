@@ -103,12 +103,19 @@ static void elect()
 				current_process = current_process->next;
 			break;
 			case FIXED_PRIORITIES:
-				current_process = current_process->next;
+				if(kmain_process.next->priority > current_process->priority || current_process->next->priority < current_process->priority) {
+					current_process = kmain_process.next;
+				}
+				else {
+					current_process = current_process->next;
+				}
 			break;
 			case DYNAMIC_PRIORITIES:
+				// TODO
 				current_process = current_process->next;
 			break;
 			default:
+				;
 		}
 	}
 	
