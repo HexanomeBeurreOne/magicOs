@@ -158,7 +158,7 @@ void do_sys_yield(uint32_t* sp) // Points on saved r0 in stack
 	__asm("msr spsr, %0" : : "r"(current_process->cpsr_user));
 	
 	//TEST
-	__asm("mov r0, %0" : : "r"(vmem_translate(0x1000000,current_process)));
+	__asm("mov r0, %0" : : "r"(vmem_translate(0x10000,current_process)));
 }
 
 void do_sys_exit(uint32_t* sp) // Points on saved r0 in stack
