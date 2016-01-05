@@ -10,6 +10,13 @@ enum PROCESS_STATUS
 	TERMINATED
 };
 
+enum SCHEDULING_TYPE
+{
+	ROUND_ROBIN,
+	FIXED_PRIORITIES,
+	DYNAMIC_PRIORITIES
+};
+
 typedef int (func_t) (void);
 
 struct pcb_s

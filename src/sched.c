@@ -9,9 +9,10 @@
 #define STACK_SIZE 10000
 
 static struct pcb_s* current_process;
-static struct pcb_s kmain_process; 
+static struct pcb_s kmain_process;
+static int scheduling_type;
 
-void sched_init()
+void sched_init(int scheduling)
 {
 	kheap_init();
 	timer_init();
@@ -21,6 +22,8 @@ void sched_init()
 	current_process->previous = current_process;
 	current_process->status = RUNNING;
 	current_process->priority = 0;
+	
+	scheduling_type = scheduling;
 
 	ENABLE_IRQ();
 }
@@ -47,18 +50,23 @@ void create_process_with_priority(func_t* entry, int priority)
 	process->sp_user = (uint32_t*)kAlloc(STACK_SIZE) + STACK_SIZE;
 
 	__asm("mrs %0, cpsr" : "=r"(process->cpsr_user)); // TODO : pourquoi nécessaire d'initialiser CPSR
-
-	// Put the next process at the right place in the list according to its priority
-	struct pcb_s* previousProcess = &kmain_process;
-// TODO
-// pb de trier par priorité si on utilise un round robin ?
-	while (lastProcess->next != &kmain_process)
-	{
-		lastProcess = lastProcess->next;
+	
+	struct pcb_s* previousProcess;
+	switch(scheduling_type) {
+		case ROUND_ROBIN:
+			previousProcess = &kmain_process->previous
+		break;
+		default:
+			previousProcess = &kmain_process;
+			while(previousProcess->next->priority >= priority && previousProcess->next != &kmain_process) {
+				previousProcess = previousProcess->next;
+			}
 	}
-	lastProcess->next = process;
-	process->previous = lastProcess;
-	process->next = &kmain_process;
+
+	previousProcess->next->previous = process
+	process->next = previousProcess->next
+	previousProcess->next = process;
+	process->previous = previousProcess;
 
 	// Initial status
 	process->status = WAITING;
@@ -90,9 +98,20 @@ static void elect()
 	else
 	{
 		current_process->status = WAITING;
-		current_process = current_process->next;
+		switch(scheduling_type) {
+			case ROUND_ROBIN:
+				current_process = current_process->next;
+			break;
+			case FIXED_PRIORITIES:
+				current_process = current_process->next;
+			break;
+			case DYNAMIC_PRIORITIES:
+				current_process = current_process->next;
+			break;
+			default:
+		}
 	}
-
+	
 	if (current_process->status == TERMINATED)
 		elect(); // Elect the next one, and delete the current one
 	else

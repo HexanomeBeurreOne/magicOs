@@ -34,7 +34,12 @@ void user_process_3()
 
 void kmain()
 {
-	sched_init();
+	/*
+	ROUND_ROBIN,
+	FIXED_PRIORITIES,
+	DYNAMIC_PRIORITIES
+	*/
+	sched_init(ROUND_ROBIN);
 
 	// Selection priorités fixes ou dynamiques
 	// TODO
