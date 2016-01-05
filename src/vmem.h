@@ -104,6 +104,12 @@ void set_frame_state(uint32_t frame, uint8_t state);
 uint32_t find_available_frame();
 
 /**
+* Renvoie une liste de frames disponible pour un nb de pages demandé
+* ou null sinon
+*/
+uint32_t* list_available_frames(uint32_t nb_page);
+
+/**
 * Ajoute une frame à la table des pages
 */
 void add_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_index, uint32_t frame);

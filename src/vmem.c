@@ -262,10 +262,10 @@ uint8_t* vmem_alloc_for_userland(struct pcb_s* process, uint32_t size)
 	uint32_t first_level_index;
 	uint32_t second_level_index;
 
-	uint32_t frame;
-
 	// Nb de pages nécessaire arrondi au nb supérieur
 	uint32_t nb_page = ((size - 1) / PAGE_SIZE) + 1;
+
+	uint32_t* frame_available_list;
 
 	// On cherche un espace contigue correspondant
 	uint32_t contiguous_pages = find_contiguous_pages(*(process->page_table), nb_page);
@@ -273,35 +273,37 @@ uint8_t* vmem_alloc_for_userland(struct pcb_s* process, uint32_t size)
 	if (contiguous_pages < UINT32_MAX)
 	{
 		// Espace trouvé !
+		
+		// On cherche si on a assez de frames dispos
+		frame_available_list = list_available_frames(nb_page);
+		if (frame_available_list == NULL)
+		{
+			//Pas assez de frames...
+			return 0;
+		}
 
+		// On a assez de frames et de pages virtuelles !
 		// On alloue une frame pour chaque page
+		uint32_t frame_i = 0;
 		for (uint32_t page_i = contiguous_pages; page_i < (contiguous_pages + nb_page); ++page_i)
 		{
-			frame = find_available_frame();
-			if (frame != UINT32_MAX)
-			{
-				// frame dispo !
-				first_level_index = page_i / SECON_LVL_TT_COUN;
-				second_level_index = page_i - first_level_index * SECON_LVL_TT_COUN;
+			// On récupère les indexes d'une page
+			first_level_index = page_i / SECON_LVL_TT_COUN;
+			second_level_index = page_i - first_level_index * SECON_LVL_TT_COUN;
 
-				// Ajout de l'adresse de la frame
-				add_frame_page_table(*(process->page_table), first_level_index, second_level_index, frame);
+			// Ajout de l'adresse de la frame
+			add_frame_page_table(*(process->page_table), first_level_index, second_level_index, frame_available_list[frame_i]);
 
-			}
-			else
-			{
-				// NO MORE RAM
-				// TODO libérer la mémoire
-				
-			}
+			++frame_i;
 		}
 
 	}
 	else
 	{
-		// pas d'espace contigu assez grand
+		// pas d'espace virtuel contigu assez grand
 		return 0;
 	}
+	kFree((uint8_t*)frame_available_list, nb_page);
 
 	return (uint8_t*)(contiguous_pages * PAGE_SIZE);
 }
@@ -349,6 +351,34 @@ uint32_t find_available_frame()
 	return UINT32_MAX;
 }
 
+/**
+* Renvoie une liste de frames disponible pour un nb de pages demandé
+* ou null sinon
+*/
+uint32_t* list_available_frames(uint32_t nb_page)
+{
+	uint32_t* frame_available_list = (uint32_t*) kAlloc(nb_page);
+	uint32_t frame;
+
+	uint32_t frame_i = 0;
+	for (; frame_i < nb_page; ++frame_i)
+	{
+		frame = find_available_frame();
+		if (frame != UINT32_MAX)
+		{
+			// frame dispo !
+			frame_available_list [frame_i] = frame;
+		}
+		else
+		{
+			// NO MORE RAM
+			kFree((uint8_t*)frame_available_list, nb_page);
+			return NULL;
+			
+		}
+	}
+	return frame_available_list;
+}
 
 /**
 * Ajoute une frame à la table des pages
