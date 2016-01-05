@@ -48,11 +48,11 @@ unsigned int init_kern_translation_table(void)
 			second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
 
 			// Browse the second level table and populate it with pysical adresses
-			for(second_level_table_index = 0; second_level_table_index < FIRST_LVL_TT_COUN; second_level_table_index++) {
+			for(second_level_table_index = 0; second_level_table_index < SECON_LVL_TT_COUN; second_level_table_index++) {
 				//build the physical address base on the virtual one
 				uint32_t physical_addr = ((first_level_table_index<<8) + second_level_table_index) <<12;
 
-				if(physical_addr < __kernel_heap_end__ && physical_addr > 0)
+				if(physical_addr < __kernel_heap_end__ && physical_addr >= 0)
 				{
 					second_level_descriptor = physical_addr;
 					//ADD KERNEL FLAGS 
@@ -73,11 +73,11 @@ unsigned int init_kern_translation_table(void)
 			second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
 
 			// Browse the second level table and populate it with pysical adresses
-			for(second_level_table_index = 0; second_level_table_index < FIRST_LVL_TT_COUN; second_level_table_index++) {
+			for(second_level_table_index = 0; second_level_table_index < SECON_LVL_TT_COUN; second_level_table_index++) {
 				//build the physical address base on the virtual one
 				uint32_t physical_addr = ((first_level_table_index<<8) + second_level_table_index) <<12;
 
-				if(physical_addr > 0x20000000 && physical_addr < 0x20FFFFFF)
+				if(physical_addr >= 0x20000000 && physical_addr < 0x20FFFFFF)
 				{
 					second_level_descriptor = physical_addr;
 					//ADD DEVICES FLAGS
