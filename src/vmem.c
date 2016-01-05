@@ -432,7 +432,15 @@ void add_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_i
 */
 void remove_frame_page_table(uint32_t* page_table, uint32_t fl_index, uint32_t sl_index)
 {
-	
+	// On récupère la table de second niveau
+	uint32_t* second_level_page_table = get_second_level_page_table(page_table, fl_index);
+
+	uint32_t frame = second_level_page_table[sl_index] / FRAME_SIZE;
+	// On met 0 dans la case de niveau 2
+	second_level_page_table[sl_index] = 0;
+
+	// On indique que la frame est maintenant libre
+	set_frame_state(frame, 0);
 }
 
 /******************************************************************************
