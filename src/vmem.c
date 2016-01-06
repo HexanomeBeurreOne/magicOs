@@ -19,8 +19,8 @@ void vmem_init()
 	//config MMU
 	configure_mmu_C();
 	//active MMU
-	//vmem_translate(32768, NULL);
-	start_mmu_C();
+	vmem_translate(32768, NULL);
+	//start_mmu_C();
 }
 
 unsigned int init_kern_translation_table(void)
@@ -66,12 +66,12 @@ unsigned int init_kern_translation_table(void)
 				if(physical_addr <= kernel_heap_end)
 				{
 					second_level_descriptor = (physical_addr<<12) | KERNEL_FLAGS;
-					second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
+					second_level_descriptor_address = (uint32_t*) (((uint32_t)second_level_table<<8 | second_level_table_index)<<2);
 					(*second_level_descriptor_address) = second_level_descriptor;
 				}
 				else
 				{
-					second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
+					second_level_descriptor_address = (uint32_t*) (((uint32_t)second_level_table<<8 | second_level_table_index)<<2);
 					(*second_level_descriptor_address) = 0;
 				}
 			}
