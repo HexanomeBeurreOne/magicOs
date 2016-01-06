@@ -6,6 +6,12 @@
 static unsigned int MMUTABLEBASE;
 static const uint32_t kernel_heap_end = (uint32_t) &__kernel_heap_end__;
 
+
+/* FLAGS */
+static const uint32_t DEVICE_FLAGS = 0b010000010110;
+static const uint32_t KERNEL_FLAGS = 0b000001010010;
+static const uint32_t FIRST_LEVEL_FLAGS = 0b0000000001;
+
 void vmem_init()
 {
 	kheap_init();
@@ -18,32 +24,56 @@ void vmem_init()
 
 unsigned int init_kern_translation_table(void)
 {
-
-	uint32_t DEVICE_FLAGS = 0b010000010110;
-	uint32_t KERNEL_FLAGS = 0b000001010010;
-	uint32_t FIRST_LEVEL_FLAGS = 0b0000000001;
-
-	// int fl_index; //first level index
-	// uint32_t * fl_page_entry = (uint32_t*)FIRST_LVL_TABLE_BASE; //first level
-
-
 	// allocate first level table
 	uint32_t* first_level_table = (uint32_t*) kAlloc_aligned(FIRST_LVL_TT_SIZE, FIRST_LVL_TT_ALIG);
-	// second level table
-	//uint32_t* second_level_table;
-	
-	// allocate second level table
-	//uint32_t virtual_addr;
-	uint32_t first_level_table_index;
-	uint32_t first_level_descriptor;
+
+	/* Second level table */
 	uint32_t* second_level_table;
-	uint32_t second_level_table_index;
+	
+	
+	/* Descriptors */
+	uint32_t first_level_descriptor;
+	uint32_t* first_level_descriptor_address;
 	uint32_t second_level_descriptor;
+	uint32_t* second_level_descriptor_address;
+
+	/* Indexes */
+	uint32_t first_level_table_index;
+	uint32_t second_level_table_index;
+
+
 
 	for(first_level_table_index = 0; first_level_table_index < FIRST_LVL_TT_COUN; first_level_table_index++)
 	{
 		// if we are between 0x0 and 0x1000000 or between 0x2000000 and 0x20FFFFFF
 		if(first_level_table_index < 16) {
+			// Allocate the second level
+			second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
+
+			// Browse the second level table and fill it
+			for(second_level_table_index = 0; second_level_table_index < SECON_LVL_TT_COUN; second_level_table_index++) {
+				// Build the physical address base on the virtual one
+				uint32_t physical_addr = ((first_level_table_index<<8) + second_level_table_index) <<12;
+
+				if(physical_addr <= kernel_heap_end)
+				{
+					second_level_descriptor = (physical_addr<<12) + KERNEL_FLAGS;
+					second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
+					(*second_level_descriptor_address) = second_level_descriptor;
+				}
+				else
+				{
+					second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
+					(*second_level_descriptor_address) = 0;
+				}
+			}
+
+			first_level_descriptor = ((uint32_t)second_level_table<<10) + FIRST_LEVEL_FLAGS;
+			first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
+			(*first_level_descriptor_address) = first_level_descriptor;
+
+		}
+		else if(first_level_table_index > 512 && first_level_table_index < 528) {
 			// Allocate the second level table but not attached to table 1 for now 
 			second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
 
@@ -52,51 +82,29 @@ unsigned int init_kern_translation_table(void)
 				//build the physical address base on the virtual one
 				uint32_t physical_addr = ((first_level_table_index<<8) + second_level_table_index) <<12;
 
-				if(physical_addr <= kernel_heap_end)
+				if(physical_addr >= 0x20000000 && physical_addr < 0x20FFFFFF)
 				{
-					second_level_descriptor = physical_addr;
-					//ADD KERNEL FLAGS 
-					second_level_descriptor = (second_level_descriptor<<12) + KERNEL_FLAGS;
-					second_level_table[second_level_table_index] = second_level_descriptor;
-				}
-				else
-				{
-					second_level_table[second_level_table_index] = 0;
-				}
-			}
-			//TODO : ADD FIRST LEVEL TABLE FLAGS TO second_level_table
-			first_level_descriptor = ((uint32_t)second_level_table<<10) + FIRST_LEVEL_FLAGS;
-			first_level_table[first_level_table_index] = first_level_descriptor;
-		}
-		else if(first_level_table_index > 512 && first_level_table_index < 528) {
-			// Allocate the second level table but not attached to table 1 for now 
-			second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
+					second_level_descriptor = (physical_addr<<12) + DEVICE_FLAGS;
+					second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
+					(*second_level_descriptor_address) = second_level_descriptor;
 
-			// Browse the second level table and populate it with pysical adresses
-			for(second_level_table_index = 0; second_level_table_index < FIRST_LVL_TT_COUN; second_level_table_index++) {
-				//build the physical address base on the virtual one
-				uint32_t physical_addr = ((first_level_table_index<<8) + second_level_table_index) <<12;
-
-				if(physical_addr > 0x20000000 && physical_addr < 0x20FFFFFF)
-				{
-					second_level_descriptor = physical_addr;
-					//ADD DEVICES FLAGS
-					second_level_descriptor = (second_level_descriptor<<12) + DEVICE_FLAGS;
-					second_level_table[second_level_table_index] = second_level_descriptor;
 				} 
 				else
 				{
-					second_level_table[second_level_table_index] = 0;
+					second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
+					(*second_level_descriptor_address) = 0;
 				}
 			}
-			//TODO : ADD FIRST LEVEL TABLE FLAGS TO second_level_table
+
 			first_level_descriptor = ((uint32_t)second_level_table<<10) + FIRST_LEVEL_FLAGS;
-			first_level_table[first_level_table_index] = first_level_descriptor;
+			first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
+			(*first_level_descriptor_address) = first_level_descriptor;
 
 		}
 		else {
 			// Translation fault
-			first_level_table[first_level_table_index] = 0;
+			first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
+			(*first_level_descriptor_address) = 0;
 		}
 	}
 	
