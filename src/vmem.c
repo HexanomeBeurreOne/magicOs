@@ -25,99 +25,155 @@ void vmem_init()
 
 unsigned int init_kern_translation_table(void)
 {
-	// allocate first level table
-	uint32_t* first_level_table = (uint32_t*) kAlloc_aligned(FIRST_LVL_TT_SIZE, FIRST_LVL_TT_ALIG);
 
-	/* Second level table */
-	uint32_t* second_level_table;
+	
+	// // allocate first level table
+	// uint32_t* first_level_table = (uint32_t*) kAlloc_aligned(FIRST_LVL_TT_SIZE, FIRST_LVL_TT_ALIG);
+
+	// /* Second level table */
+	// uint32_t* second_level_table;
 	
 	
-	/* Descriptors */
-	uint32_t first_level_descriptor;
+	// /* Descriptors */
+	// uint32_t first_level_descriptor;
+	// uint32_t* first_level_descriptor_address;
+	// uint32_t second_level_descriptor;
+	// uint32_t* second_level_descriptor_address;
+
+	// /* Indexes */
+	// uint32_t first_level_table_index;
+	// uint32_t second_level_table_index;
+
+	// /* Debug */
+	// uint32_t debug_first_level_descriptor = 42;
+	// uint32_t* debug_first_level_descriptor_address = (uint32_t*)42;
+	// debug_first_level_descriptor++;
+	// debug_first_level_descriptor_address= (uint32_t*)debug_first_level_descriptor;
+	// debug_first_level_descriptor = (uint32_t)debug_first_level_descriptor_address;
+
+
+
+	// for(first_level_table_index = 0; first_level_table_index < FIRST_LVL_TT_COUN; first_level_table_index++)
+	// {
+	// 	// if we are between 0x0 and 0x1000000 or between 0x2000000 and 0x20FFFFFF
+	// 	if(first_level_table_index < 16) {
+	// 		// Allocate the second level
+	// 		second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
+
+	// 		// Browse the second level table and fill it
+	// 		for(second_level_table_index = 0; second_level_table_index < SECON_LVL_TT_COUN; second_level_table_index++) {
+	// 			// Build the physical address base on the virtual one
+	// 			uint32_t physical_addr = ((first_level_table_index<<8) | second_level_table_index) <<12;
+
+	// 			if(physical_addr <= kernel_heap_end)
+	// 			{
+	// 				second_level_descriptor = (physical_addr<<12) | KERNEL_FLAGS;
+	// 				second_level_descriptor_address = (uint32_t*) (((uint32_t)second_level_table<<8 | second_level_table_index)<<2);
+	// 				(*second_level_descriptor_address) = second_level_descriptor;
+	// 			}
+	// 			else
+	// 			{
+	// 				second_level_descriptor_address = (uint32_t*) (((uint32_t)second_level_table<<8 | second_level_table_index)<<2);
+	// 				(*second_level_descriptor_address) = 0;
+	// 			}
+	// 		}
+
+	// 		first_level_descriptor = ((uint32_t)second_level_table<<10) | FIRST_LEVEL_FLAGS;
+	// 		first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
+	// 		(*first_level_descriptor_address) = first_level_descriptor;
+
+	// 	}
+	// 	else if(first_level_table_index > 512 && first_level_table_index < 528) {
+	// 		// Allocate the second level table but not attached to table 1 for now 
+	// 		second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
+
+	// 		// Browse the second level table and populate it with pysical adresses
+	// 		for(second_level_table_index = 0; second_level_table_index < SECON_LVL_TT_COUN; second_level_table_index++) {
+	// 			//build the physical address base on the virtual one
+	// 			uint32_t physical_addr = ((first_level_table_index<<8) | second_level_table_index) <<12;
+
+	// 			if(physical_addr >= 0x20000000 && physical_addr < 0x20FFFFFF)
+	// 			{
+	// 				second_level_descriptor = (physical_addr<<12) | DEVICE_FLAGS;
+	// 				second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
+	// 				(*second_level_descriptor_address) = second_level_descriptor;
+
+	// 			} 
+	// 			else
+	// 			{
+	// 				second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
+	// 				(*second_level_descriptor_address) = 0;
+	// 			}
+	// 		}
+
+	// 		first_level_descriptor = ((uint32_t)second_level_table<<10) | FIRST_LEVEL_FLAGS;
+	// 		first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
+	// 		(*first_level_descriptor_address) = first_level_descriptor;
+
+	// 	}
+	// 	else {
+	// 		// Translation fault
+	// 		first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
+	// 		(*first_level_descriptor_address) = 0;
+
+	// 	}
+	// }
+	
+	// return (unsigned int)first_level_table;
+
+	// Alloc page table
+	uint32_t** page_table = (uint32_t**) kAlloc_aligned(FIRST_LVL_TT_SIZE, FIRST_LVL_TT_ALIG);
+	// Put kern and devices pages for all processes or for kernel
 	uint32_t* first_level_descriptor_address;
-	uint32_t second_level_descriptor;
 	uint32_t* second_level_descriptor_address;
-
-	/* Indexes */
-	uint32_t first_level_table_index;
-	uint32_t second_level_table_index;
-
-	/* Debug */
-	uint32_t debug_first_level_descriptor = 42;
-	uint32_t* debug_first_level_descriptor_address = (uint32_t*)42;
-	debug_first_level_descriptor++;
-	debug_first_level_descriptor_address= (uint32_t*)debug_first_level_descriptor;
-	debug_first_level_descriptor = (uint32_t)debug_first_level_descriptor_address;
-
-
-
-	for(first_level_table_index = 0; first_level_table_index < FIRST_LVL_TT_COUN; first_level_table_index++)
+	uint32_t first_lvl_idx, first_lvl_desc, second_lvl_idx;
+	uint32_t log_addr, i;
+	
+	// ** Init kernel pages
+	// Alloc table pages for kernel (from 0 to 0xffffff (kernel_heap_end, included))
+	for(i = 0; i < nb_tables_kernel_device; i++)
 	{
-		// if we are between 0x0 and 0x1000000 or between 0x2000000 and 0x20FFFFFF
-		if(first_level_table_index < 16) {
-			// Allocate the second level
-			second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
+		first_level_descriptor_address = (uint32_t*) ((uint32_t)page_table | (i << 2));
+		(*first_level_descriptor_address) = (uint32_t) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG) | first_table_flags;
+	}
+	// Fill second level tables
+	for (log_addr = 0; log_addr < kernel_heap_end; log_addr += PAGE_SIZE)
+	{
+		first_lvl_idx = log_addr >> FIRST_LVL_IDX_BEGIN;
+		first_level_descriptor_address = (uint32_t*) ((uint32_t)page_table | (first_lvl_idx << 2));
 
-			// Browse the second level table and fill it
-			for(second_level_table_index = 0; second_level_table_index < SECON_LVL_TT_COUN; second_level_table_index++) {
-				// Build the physical address base on the virtual one
-				uint32_t physical_addr = ((first_level_table_index<<8) | second_level_table_index) <<12;
+		first_lvl_desc = (*first_level_descriptor_address) & SECOND_LVL_ADDR_MASK;
+		second_lvl_idx = (log_addr >> SECOND_LVL_IDX_BEGIN) & SECOND_LVL_IDX_LEN;
 
-				if(physical_addr <= kernel_heap_end)
-				{
-					second_level_descriptor = (physical_addr<<12) | KERNEL_FLAGS;
-					second_level_descriptor_address = (uint32_t*) (((uint32_t)second_level_table<<8 | second_level_table_index)<<2);
-					(*second_level_descriptor_address) = second_level_descriptor;
-				}
-				else
-				{
-					second_level_descriptor_address = (uint32_t*) (((uint32_t)second_level_table<<8 | second_level_table_index)<<2);
-					(*second_level_descriptor_address) = 0;
-				}
-			}
+		second_level_descriptor_address = (uint32_t*) (first_lvl_desc | (second_lvl_idx << 2));
 
-			first_level_descriptor = ((uint32_t)second_level_table<<10) | FIRST_LEVEL_FLAGS;
-			first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
-			(*first_level_descriptor_address) = first_level_descriptor;
-
-		}
-		else if(first_level_table_index > 512 && first_level_table_index < 528) {
-			// Allocate the second level table but not attached to table 1 for now 
-			second_level_table = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
-
-			// Browse the second level table and populate it with pysical adresses
-			for(second_level_table_index = 0; second_level_table_index < SECON_LVL_TT_COUN; second_level_table_index++) {
-				//build the physical address base on the virtual one
-				uint32_t physical_addr = ((first_level_table_index<<8) | second_level_table_index) <<12;
-
-				if(physical_addr >= 0x20000000 && physical_addr < 0x20FFFFFF)
-				{
-					second_level_descriptor = (physical_addr<<12) | DEVICE_FLAGS;
-					second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
-					(*second_level_descriptor_address) = second_level_descriptor;
-
-				} 
-				else
-				{
-					second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
-					(*second_level_descriptor_address) = 0;
-				}
-			}
-
-			first_level_descriptor = ((uint32_t)second_level_table<<10) | FIRST_LEVEL_FLAGS;
-			first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
-			(*first_level_descriptor_address) = first_level_descriptor;
-
-		}
-		else {
-			// Translation fault
-			first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
-			(*first_level_descriptor_address) = 0;
-
-		}
+        *second_level_descriptor_address = (log_addr & 0xFFFFF000) | kernel_flags;
 	}
 	
-	return (unsigned int)first_level_table;
+		
+	// ** Init devices pages
+	// Alloc table pages for devices (from 0x20000000 to 0x20ffffff)
+	for(i = device_address_page_table_idx_start; i < device_address_page_table_idx_end; i++) 
+	{
+		first_level_descriptor_address = (uint32_t*) ((uint32_t)page_table | (i << 2));
+		(*first_level_descriptor_address) = (uint32_t) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG) | first_table_flags;
+	}
+	// Fill second level tables
+	for(log_addr = 0x20000000; log_addr < 0x20FFFFFF; log_addr += PAGE_SIZE)
+    {
+        first_lvl_idx = log_addr >> FIRST_LVL_IDX_BEGIN;
+		first_level_descriptor_address = (uint32_t*) ((uint32_t)page_table | (first_lvl_idx << 2));
+
+		first_lvl_desc = (*first_level_descriptor_address) & SECOND_LVL_ADDR_MASK;
+		second_lvl_idx = (log_addr >> SECOND_LVL_IDX_BEGIN) & SECOND_LVL_IDX_LEN;
+
+		second_level_descriptor_address = (uint32_t*) (first_lvl_desc | (second_lvl_idx << 2));
+
+        *second_level_descriptor_address = (log_addr & 0xFFFFF000) | device_flags;
+    }
+	
+	return page_table;
+	
 }
 
 
