@@ -19,6 +19,7 @@ void vmem_init()
 	//config MMU
 	configure_mmu_C();
 	//active MMU
+	//vmem_translate(32768, NULL);
 	start_mmu_C();
 }
 
@@ -41,6 +42,13 @@ unsigned int init_kern_translation_table(void)
 	uint32_t first_level_table_index;
 	uint32_t second_level_table_index;
 
+	/* Debug */
+	uint32_t debug_first_level_descriptor = 42;
+	uint32_t* debug_first_level_descriptor_address = (uint32_t*)42;
+	debug_first_level_descriptor++;
+	debug_first_level_descriptor_address= (uint32_t*)debug_first_level_descriptor;
+	debug_first_level_descriptor = (uint32_t)debug_first_level_descriptor_address;
+
 
 
 	for(first_level_table_index = 0; first_level_table_index < FIRST_LVL_TT_COUN; first_level_table_index++)
@@ -53,11 +61,11 @@ unsigned int init_kern_translation_table(void)
 			// Browse the second level table and fill it
 			for(second_level_table_index = 0; second_level_table_index < SECON_LVL_TT_COUN; second_level_table_index++) {
 				// Build the physical address base on the virtual one
-				uint32_t physical_addr = ((first_level_table_index<<8) + second_level_table_index) <<12;
+				uint32_t physical_addr = ((first_level_table_index<<8) | second_level_table_index) <<12;
 
 				if(physical_addr <= kernel_heap_end)
 				{
-					second_level_descriptor = (physical_addr<<12) + KERNEL_FLAGS;
+					second_level_descriptor = (physical_addr<<12) | KERNEL_FLAGS;
 					second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
 					(*second_level_descriptor_address) = second_level_descriptor;
 				}
@@ -68,7 +76,7 @@ unsigned int init_kern_translation_table(void)
 				}
 			}
 
-			first_level_descriptor = ((uint32_t)second_level_table<<10) + FIRST_LEVEL_FLAGS;
+			first_level_descriptor = ((uint32_t)second_level_table<<10) | FIRST_LEVEL_FLAGS;
 			first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
 			(*first_level_descriptor_address) = first_level_descriptor;
 
@@ -80,11 +88,11 @@ unsigned int init_kern_translation_table(void)
 			// Browse the second level table and populate it with pysical adresses
 			for(second_level_table_index = 0; second_level_table_index < SECON_LVL_TT_COUN; second_level_table_index++) {
 				//build the physical address base on the virtual one
-				uint32_t physical_addr = ((first_level_table_index<<8) + second_level_table_index) <<12;
+				uint32_t physical_addr = ((first_level_table_index<<8) | second_level_table_index) <<12;
 
 				if(physical_addr >= 0x20000000 && physical_addr < 0x20FFFFFF)
 				{
-					second_level_descriptor = (physical_addr<<12) + DEVICE_FLAGS;
+					second_level_descriptor = (physical_addr<<12) | DEVICE_FLAGS;
 					second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index<<2));
 					(*second_level_descriptor_address) = second_level_descriptor;
 
@@ -96,7 +104,7 @@ unsigned int init_kern_translation_table(void)
 				}
 			}
 
-			first_level_descriptor = ((uint32_t)second_level_table<<10) + FIRST_LEVEL_FLAGS;
+			first_level_descriptor = ((uint32_t)second_level_table<<10) | FIRST_LEVEL_FLAGS;
 			first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
 			(*first_level_descriptor_address) = first_level_descriptor;
 
@@ -105,6 +113,7 @@ unsigned int init_kern_translation_table(void)
 			// Translation fault
 			first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index<<2));
 			(*first_level_descriptor_address) = 0;
+
 		}
 	}
 	
