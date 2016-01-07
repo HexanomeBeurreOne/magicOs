@@ -121,9 +121,20 @@ unsigned int init_kern_translation_table(void)
 	
 	// return (unsigned int)first_level_table;
 
-	static const uint8_t first_table_flags = 1; // 0b0000000001
-	static const uint16_t kernel_flags = 0b000001010010;
-	static const uint16_t device_flags = 0b010000010110;
+
+	/* **** Constants **** */
+	const uint8_t FIRST_LVL_IDX_BEGIN = 20;
+	const uint8_t SECOND_LVL_IDX_BEGIN = 12;
+	const uint8_t SECOND_LVL_IDX_LEN = 0xFF;
+	const uint16_t PAGE_IDX_LEN = 0xFFF;
+
+	const uint32_t FIRST_LVL_ADDR_MASK = 0xFFFFC000; // last 14 bits to 0
+	const uint32_t SECOND_LVL_ADDR_MASK = 0xFFFFFC00; // last 10 bits to 0
+	const uint32_t PHY_ADDR_MASK = 0xFFFFF000; // last 12 bits to 0
+
+	const uint8_t first_table_flags = 1; // 0b0000000001
+	const uint16_t kernel_flags = 0b000001010010;
+	const uint16_t device_flags = 0b010000010110;
 
 	const uint8_t nb_tables_kernel_device = 16; // For kernel & device, we have 0xFFFFFF addresse to store, 16 = 0xFFFFFF / (RAME_SIZE[4096] * SECON_LVL_TT_COUN[256])
 	const uint16_t device_address_page_table_idx_start = 0x20000000 >> 20;
