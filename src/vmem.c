@@ -121,6 +121,9 @@ unsigned int init_kern_translation_table(void)
 	
 	// return (unsigned int)first_level_table;
 
+	const uint8_t nb_tables_kernel_device = 16; // For kernel & device, we have 0xFFFFFF addresse to store, 16 = 0xFFFFFF / (RAME_SIZE[4096] * SECON_LVL_TT_COUN[256])
+	const uint16_t device_address_page_table_idx_start = 0x20000000 >> 20;
+	const uint16_t device_address_page_table_idx_end = (0x20000000 >> 20) + 16;
 	// Alloc page table
 	uint32_t** page_table = (uint32_t**) kAlloc_aligned(FIRST_LVL_TT_SIZE, FIRST_LVL_TT_ALIG);
 	// Put kern and devices pages for all processes or for kernel
