@@ -13,7 +13,7 @@
 
 #define SECON_LVL_TT_COUN 256
 #define SECON_LVL_TT_SIZE SECON_LVL_TT_COUN*TT_ENTRY_SIZE
-#define SECON_LVL_TT_ALIG 10 
+#define SECON_LVL_TT_ALIG 10
 
 extern uint32_t __kernel_heap_end__;
 
