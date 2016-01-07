@@ -20,7 +20,7 @@ void vmem_init()
 	configure_mmu_C();
 	//active MMU
 	vmem_translate(32768, NULL);
-	//start_mmu_C();
+	start_mmu_C();
 }
 
 unsigned int init_kern_translation_table(void)
