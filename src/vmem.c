@@ -129,7 +129,7 @@ unsigned int init_kern_translation_table(void)
 	
 	const uint32_t SECOND_LVL_ADDR_MASK = 0xFFFFFC00; // last 10 bits to 0
 
-	const uint8_t nb_tables_kernel_device = kernel_heap_end / (PAGE_SIZE * SECON_LVL_TT_COUN); // For kernel & device, we have 0xFFFFFF addresse to store, 16 = 0xFFFFFF / (RAME_SIZE[4096] * SECON_LVL_TT_COUN[256])
+	const uint8_t nb_tables_kernel_device = (kernel_heap_end / (PAGE_SIZE * SECON_LVL_TT_COUN)) + 1; // For kernel & device, we have 0xFFFFFF addresse to store, 16 = 0xFFFFFF / (RAME_SIZE[4096] * SECON_LVL_TT_COUN[256])
 	const uint16_t device_address_page_table_idx_start = 0x20000000 >> 20;
 	const uint16_t device_address_page_table_idx_end = (0x20000000 >> 20) + 16;
 	// Alloc page table
