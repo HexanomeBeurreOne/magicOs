@@ -126,12 +126,9 @@ unsigned int init_kern_translation_table(void)
 	const uint8_t FIRST_LVL_IDX_BEGIN = 20;
 	const uint8_t SECOND_LVL_IDX_BEGIN = 12;
 	const uint8_t SECOND_LVL_IDX_LEN = 0xFF;
-	const uint16_t PAGE_IDX_LEN = 0xFFF;
-
-	const uint32_t FIRST_LVL_ADDR_MASK = 0xFFFFC000; // last 14 bits to 0
+	
 	const uint32_t SECOND_LVL_ADDR_MASK = 0xFFFFFC00; // last 10 bits to 0
-	const uint32_t PHY_ADDR_MASK = 0xFFFFF000; // last 12 bits to 0
-
+	
 	const uint8_t first_table_flags = 1; // 0b0000000001
 	const uint16_t kernel_flags = 0b000001010010;
 	const uint16_t device_flags = 0b010000010110;
@@ -190,7 +187,7 @@ unsigned int init_kern_translation_table(void)
         *second_level_descriptor_address = (log_addr & 0xFFFFF000) | device_flags;
     }
 	
-	return page_table;
+	return (unsigned int)page_table;
 	
 }
 
