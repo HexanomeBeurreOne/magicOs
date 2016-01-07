@@ -20,6 +20,7 @@ void vmem_init()
 	configure_mmu_C();
 	//active MMU
 	vmem_translate(32768, NULL);
+	vmem_translate(0x1000001, NULL);
 	start_mmu_C();
 }
 
