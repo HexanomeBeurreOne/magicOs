@@ -8,27 +8,42 @@
 void user_process_1()
 {
 	int v1 = 5;
-	while (1)
+	int m = 0;
+	while (m < 500)
 	{
 		v1++;
+		if(v1 > 1000000) {
+			m++;
+			v1 = 0;
+		}
 	}
 }
 
 void user_process_2()
 {
 	int v2 = -12;
-	while (1)
+	int m = 0;
+	while (m < 500)
 	{
-		v2 -= 2;
+		v2++;
+		if(v2 > 1000000) {
+			m++;
+			v2 = 0;
+		}
 	}
 }
 
 void user_process_3()
 {
 	int v3 = 0;
-	while (1)
+	int m = 0;
+	while (m < 500)
 	{
-		v3 += 5;
+		v3++;
+		if(v3 > 1000000) {
+			m++;
+			v3 = 0;
+		}
 	}
 }
 
@@ -39,7 +54,8 @@ void kmain()
 	FIXED_PRIORITIES,
 	DYNAMIC_PRIORITIES
 	*/
-	sched_init(ROUND_ROBIN);
+	// Priorité max ou min pour kmain ?
+	sched_init(FIXED_PRIORITIES);
 
 	// Selection priorités fixes ou dynamiques
 	// TODO

@@ -3,6 +3,8 @@
 
 #define NBREG 13
 
+#define INCREMENT_IF_WAITING_SINCE 2
+
 enum PROCESS_STATUS
 {
 	WAITING,
@@ -32,6 +34,7 @@ struct pcb_s
 	int status;
 	int return_code;
 	int priority;
+	int waiting_since;
 	
 	struct pcb_s* next;
 	struct pcb_s* previous;

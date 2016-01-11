@@ -28,6 +28,50 @@ void sched_init(int scheduling)
 	ENABLE_IRQ();
 }
 
+void add_process_to_loop(struct pcb_s* process)
+{
+	struct pcb_s* previousProcess;
+	switch(scheduling_type) {
+		case ROUND_ROBIN:
+			previousProcess = kmain_process.previous;
+		break;
+		default:
+			previousProcess = &kmain_process;
+			while(previousProcess->next->priority >= process->priority && previousProcess->next != &kmain_process) {
+				previousProcess = previousProcess->next;
+			}
+	}
+
+	previousProcess->next->previous = process;
+	process->next = previousProcess->next;
+	previousProcess->next = process;
+	process->previous = previousProcess;
+}
+
+void remove_process_from_loop(struct pcb_s* process)
+{
+	// Link the previous element to the next and the next to the previous to delete current process
+	process->previous->next = process->next;
+	process->next->previous = process->previous;
+}
+
+void update_priorities()
+{
+	// TODO : set maximum priority
+	static struct pcb_s* process;
+	process = kmain_process.next;
+	while(process != &kmain_process) {
+		process->waiting_since++;
+		if(process->waiting_since == INCREMENT_IF_WAITING_SINCE) {
+			process->waiting_since = 0;
+			process->priority++;
+			remove_process_from_loop(process);
+			add_process_to_loop(process);
+		}
+		process = process->next;
+	}
+}
+
 static void start_current_process()
 {
 	current_process->entry();
@@ -51,22 +95,8 @@ void create_process_with_priority(func_t* entry, int priority)
 
 	__asm("mrs %0, cpsr" : "=r"(process->cpsr_user)); // TODO : pourquoi nécessaire d'initialiser CPSR
 	
-	struct pcb_s* previousProcess;
-	switch(scheduling_type) {
-		case ROUND_ROBIN:
-			previousProcess = kmain_process.previous;
-		break;
-		default:
-			previousProcess = &kmain_process;
-			while(previousProcess->next->priority >= priority && previousProcess->next != &kmain_process) {
-				previousProcess = previousProcess->next;
-			}
-	}
-
-	previousProcess->next->previous = process;
-	process->next = previousProcess->next;
-	previousProcess->next = process;
-	process->previous = previousProcess;
+	// Add the process in the loop of processes
+	add_process_to_loop(process);
 
 	// Initial status
 	process->status = WAITING;
@@ -85,12 +115,12 @@ static void elect()
 		// If it is the last process
 		if (current_process == current_process->next && current_process == current_process->previous)
 			terminate_kernel();
+		
+		// Remove the process from the loop of processes
+		remove_process_from_loop(current_process);
 
-		// Link the previous element to the next and the next to the previous to delete current process
-		current_process->previous->next = current_process->next;
-		current_process->next->previous = current_process->previous;
 		struct pcb_s* processToDelete = current_process;
-		// ROUND ROBIN, NEXT PROCESS IS ELECTED PROCESS
+
 		current_process = current_process->next;
 		
 		free_process(processToDelete);
@@ -102,20 +132,13 @@ static void elect()
 			case ROUND_ROBIN:
 				current_process = current_process->next;
 			break;
-			case FIXED_PRIORITIES:
+			default:
 				if(kmain_process.next->priority > current_process->priority || current_process->next->priority < current_process->priority) {
 					current_process = kmain_process.next;
 				}
 				else {
 					current_process = current_process->next;
 				}
-			break;
-			case DYNAMIC_PRIORITIES:
-				// TODO
-				current_process = current_process->next;
-			break;
-			default:
-				;
 		}
 	}
 	
@@ -176,6 +199,9 @@ void do_sys_yield(uint32_t* sp) // Points on saved r0 in stack
 
 	// Elects new current process
 	elect();
+	if(scheduling_type == DYNAMIC_PRIORITIES) {
+		update_priorities();
+	}
 
 	// Update context which will be reloaded
 	for (i = 0; i < NBREG; ++i)
