@@ -64,7 +64,7 @@ void kmain()
 	//create_process((func_t*)&user_process_2);
 	//create_process((func_t*)&user_process_3);
 
-	// Processus avec priorité
+	// Processes with priority
 	create_process_with_priority((func_t*)&user_process_1, 3);
 	create_process_with_priority((func_t*)&user_process_2, 1);
 	create_process_with_priority((func_t*)&user_process_3, 4);

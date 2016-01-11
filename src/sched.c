@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "sched.h"
 #include "kheap.h"
+#include "vmem.h"
 #include "config.h"
 #include "hw.h"
 #include "asm_tools.h"
@@ -14,7 +15,8 @@ static int scheduling_type;
 
 void sched_init(int scheduling)
 {
-	kheap_init();
+	//9.6 Appel vmem_init 
+	vmem_init();
 	timer_init();
 
 	current_process = &kmain_process;
@@ -209,7 +211,7 @@ void do_sys_yield(uint32_t* sp) // Points on saved r0 in stack
 
 	// Elects new current process
 	elect();
-
+	
 	// Update context which will be reloaded
 	for (i = 0; i < NBREG; ++i)
 	{
@@ -223,6 +225,9 @@ void do_sys_yield(uint32_t* sp) // Points on saved r0 in stack
 	__asm("cps 0b10011"); // SVC mode
 
 	__asm("msr spsr, %0" : : "r"(current_process->cpsr_user));
+	
+	//TEST
+	//__asm("mov r0, %0" : : "r"(vmem_translate(0x1000000,current_process)));
 }
 
 void do_sys_exit(uint32_t* sp) // Points on saved r0 in stack

@@ -35,6 +35,9 @@ struct pcb_s
 	int return_code;
 	int priority;
 	int waiting_since;
+
+	uint32_t** page_table;
+
 	
 	struct pcb_s* next;
 	struct pcb_s* previous;
