@@ -21,7 +21,10 @@ void sched_init(int scheduling)
 	current_process->next = current_process;
 	current_process->previous = current_process;
 	current_process->status = RUNNING;
+	// Which priority for kmain_process ???
 	current_process->priority = 0;
+	// Useless
+	current_process->waiting_since = 0;
 	
 	scheduling_type = scheduling;
 
@@ -61,12 +64,17 @@ void update_priorities()
 	static struct pcb_s* process;
 	process = kmain_process.next;
 	while(process != &kmain_process) {
-		process->waiting_since++;
-		if(process->waiting_since == INCREMENT_IF_WAITING_SINCE) {
+		if(process == current_process) {
 			process->waiting_since = 0;
-			process->priority++;
-			remove_process_from_loop(process);
-			add_process_to_loop(process);
+		}
+		else {
+			process->waiting_since++;
+			if(process->waiting_since >= INCREMENT_IF_WAITING_SINCE) {
+				process->waiting_since = 0;
+				process->priority++;
+				remove_process_from_loop(process);
+				add_process_to_loop(process);
+			}
 		}
 		process = process->next;
 	}
@@ -109,6 +117,19 @@ static void free_process(struct pcb_s* process)
 
 static void elect()
 {
+	struct pcb_s* next_process;
+	switch(scheduling_type) {
+		case ROUND_ROBIN:
+			next_process = current_process->next;
+		break;
+		default:
+			if(kmain_process.next->priority > current_process->priority || current_process->next->priority < current_process->priority) {
+				next_process = kmain_process.next;
+			}
+			else {
+				next_process = current_process->next;
+			}
+	}
 	// Delete current if terminated (so a terminated process does not wait at the end of list)
 	if (current_process->status == TERMINATED)
 	{
@@ -118,30 +139,14 @@ static void elect()
 		
 		// Remove the process from the loop of processes
 		remove_process_from_loop(current_process);
-
-		struct pcb_s* processToDelete = current_process;
-
-		current_process = current_process->next;
 		
-		free_process(processToDelete);
+		free_process(current_process);
 	}
 	else
 	{
 		current_process->status = WAITING;
-		switch(scheduling_type) {
-			case ROUND_ROBIN:
-				current_process = current_process->next;
-			break;
-			default:
-				if(kmain_process.next->priority > current_process->priority || current_process->next->priority < current_process->priority) {
-					current_process = kmain_process.next;
-				}
-				else {
-					current_process = current_process->next;
-				}
-		}
 	}
-	
+	current_process = next_process;
 	if (current_process->status == TERMINATED)
 		elect(); // Elect the next one, and delete the current one
 	else

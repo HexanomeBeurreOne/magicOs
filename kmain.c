@@ -55,13 +55,11 @@ void kmain()
 	FIXED_PRIORITIES,
 	DYNAMIC_PRIORITIES
 	*/
-	// Priorité max ou min pour kmain ?
+
+	// Need to specify the scheduler
 	sched_init(DYNAMIC_PRIORITIES);
 
-	// Selection priorités fixes ou dynamiques
-	// TODO
-
-	// Priorité par défaut : 0
+	// Default priority : 0
 	//create_process((func_t*)&user_process_1);
 	//create_process((func_t*)&user_process_2);
 	//create_process((func_t*)&user_process_3);
