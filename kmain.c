@@ -42,7 +42,6 @@ void test_led_off()
 
 void test_clavier()
 {
-	hw_init();
 	UsbInitialise();
 	int nb_clavier;
 	
@@ -64,7 +63,7 @@ void test_clavier()
 
 void kmain()
 {
-	
+	hw_init();
 	sched_init();
 	//create_process((func_t*)&user_process_1);
 	//create_process((func_t*)&user_process_2);
