@@ -19,7 +19,7 @@ b *sys_exit
 
 b *user_process_1
 b *user_process_2
-b *user_process_3
+b *test_led_blink
 
 source utils.gdb
 
