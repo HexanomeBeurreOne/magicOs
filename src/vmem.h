@@ -28,7 +28,7 @@
 #define MEMORY_SPACE 0x20FFFFFF
 #define FRAMES_OCCUPATION_TABLE_SIZE (MEMORY_SPACE / FRAME_SIZE) // 135 168
 
-#define frame_kernel_heap_end (__kernel_heap_end__ / FRAME_SIZE)
+
 #define frame_devices_start (0x20000000 / FRAME_SIZE)
 #define frame_devices_end (0x20FFFFFF / FRAME_SIZE)
 

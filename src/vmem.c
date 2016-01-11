@@ -28,6 +28,10 @@ static const uint32_t kernel_heap_end = (uint32_t) &__kernel_heap_end__;
 // Indicates available frames
 uint8_t* frames_occupation_table;
 
+static uint32_t frame_kernel_heap_end = (16777215 / 4096);
+
+
+
 /******************************
 9.6	    
 *******************************/
@@ -47,7 +51,10 @@ void vmem_init()
 
 	//__asm("cps 0b10111");//Activate data abort and interruptions : bit 7-8 of cpsr
 	//TODO Later
-	
+	uint32_t occ = get_frame_state(2000);
+	occ = get_frame_state(50000);
+	occ = get_frame_state(133000);
+	vmem_translate(occ, NULL);
 }
 
 
@@ -239,7 +246,11 @@ uint8_t* init_frames_occupation_table()
 
 	//On marque les frames qui sont occupées (1) et celles libres (0)
 	uint32_t i;
-	
+	uint32_t de = frame_devices_start;
+	uint32_t ds = frame_devices_end;
+	ds = ds;
+	de = de;
+
 	for (i = 0; i <= frame_kernel_heap_end; i++)
 	{
 		frames_table[i] = FRAME_OCCUPIED;
@@ -348,7 +359,7 @@ void vmem_free(uint8_t* vAddress, struct pcb_s* process, unsigned int size)
 
 
 /**************************************************************************
-			    			FRAMES TABLE HELPERS
+			    FRAMES TABLE HELPERS
 **************************************************************************/
 
 /**
