@@ -52,13 +52,22 @@ void test_clavier()
 	}
 	
 	char input_char = 0;
-	
-	while (input_char != 'b')
-	{
+
+
+	while (input_char == 0) {
 		KeyboardUpdate();
 		input_char = KeyboardGetChar();
 	}
-	led_on();
+	
+	if (input_char == 'e')
+	{
+		led_on();
+	}
+	if (input_char == 'a')
+	{
+		led_off();
+	}
+	input_char = 0;
 }
 
 void kmain()
