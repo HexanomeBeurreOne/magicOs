@@ -4,17 +4,20 @@
 #include <stdint.h>
 #include "sched.h"
 
+
 //**************************************************** PAGE TABLE
+
 #define PAGE_SIZE 4096 // 4KB 
 #define TT_ENTRY_SIZE 4 //1 case = 32 bits
 
 #define FIRST_LVL_TT_COUN 4096
 #define FIRST_LVL_TT_SIZE (FIRST_LVL_TT_COUN * TT_ENTRY_SIZE) // 16384
-#define FIRST_LVL_TT_ALIG 10 //TODO : WHY ?
+#define FIRST_LVL_TT_ALIG 14
 
 #define SECON_LVL_TT_COUN 256
-#define SECON_LVL_TT_SIZE  (SECON_LVL_TT_COUN * TT_ENTRY_SIZE) // 1024
-#define SECON_LVL_TT_ALIG 14 //TODO : WHY ?
+#define SECON_LVL_TT_SIZE (SECON_LVL_TT_COUN * TT_ENTRY_SIZE) // 1024
+#define SECON_LVL_TT_ALIG 10
+
 
 //****** FLAGS
 #define FIRST_LVL_FLAGS 0x1
@@ -86,7 +89,7 @@ uint8_t* init_frames_occupation_table();
 void free_frames_occupation_table();
 
 /**************************************************************************
-9.11-13			    ALLOUE PLUSIEURS PAGES A UN PROCESS
+9.11-13		    ALLOUE PLUSIEURS PAGES A UN PROCESS
 **************************************************************************/
 /**
  * +size : nb d'octets qu'il faut allouer

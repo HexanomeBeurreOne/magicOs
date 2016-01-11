@@ -23,6 +23,7 @@ static const uint32_t FIRST_LEVEL_FLAGS = 0b0000000001;
 
 // Page table address
 static unsigned int MMUTABLEBASE;
+static const uint32_t kernel_heap_end = (uint32_t) &__kernel_heap_end__;
 
 // Indicates available frames
 uint8_t* frames_occupation_table;
@@ -63,7 +64,7 @@ unsigned int init_kern_translation_table(void)
 	
 	const uint32_t SECOND_LVL_ADDR_MASK = 0xFFFFFC00; // last 10 bits to 0
 
-	const uint8_t nb_tables_kernel_device = (__kernel_heap_end__ / (PAGE_SIZE * SECON_LVL_TT_COUN)) + 1; // For kernel & device, we have 0xFFFFFF addresse to store, 16 = 0xFFFFFF / (RAME_SIZE[4096] * SECON_LVL_TT_COUN[256])
+	const uint8_t nb_tables_kernel_device = (kernel_heap_end / (PAGE_SIZE * SECON_LVL_TT_COUN)) + 1; // For kernel & device, we have 0xFFFFFF addresse to store, 16 = 0xFFFFFF / (RAME_SIZE[4096] * SECON_LVL_TT_COUN[256])
 	const uint16_t device_address_page_table_idx_start = 0x20000000 >> 20;
 	const uint16_t device_address_page_table_idx_end = (0x20000000 >> 20) + 16;
 	// Alloc page table
@@ -82,7 +83,7 @@ unsigned int init_kern_translation_table(void)
 		(*first_level_descriptor_address) = (uint32_t) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG) | FIRST_LEVEL_FLAGS;
 	}
 	// Fill second level tables for kernel
-	for (log_addr = 0; log_addr < __kernel_heap_end__; log_addr += PAGE_SIZE)
+	for (log_addr = 0; log_addr < kernel_heap_end; log_addr += PAGE_SIZE)
 	{
 		first_lvl_idx = log_addr >> FIRST_LVL_IDX_BEGIN;
 		first_level_descriptor_address = (uint32_t*) ((uint32_t)page_table | (first_lvl_idx << 2));
