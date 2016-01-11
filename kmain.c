@@ -50,12 +50,13 @@ void user_process_3()
 void kmain()
 {
 	/*
+	Types of schedulers available :
 	ROUND_ROBIN,
 	FIXED_PRIORITIES,
 	DYNAMIC_PRIORITIES
 	*/
 	// Priorité max ou min pour kmain ?
-	sched_init(FIXED_PRIORITIES);
+	sched_init(DYNAMIC_PRIORITIES);
 
 	// Selection priorités fixes ou dynamiques
 	// TODO

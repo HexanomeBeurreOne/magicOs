@@ -146,6 +146,11 @@ static void elect()
 		elect(); // Elect the next one, and delete the current one
 	else
 		current_process->status = RUNNING; // Else, this one is now running
+
+	// Updates the wait counter used in dynamic priorities scheduling
+	if(scheduling_type == DYNAMIC_PRIORITIES) {
+		update_priorities();
+	}
 }
 
 void do_sys_yieldto(uint32_t* sp) // Points on saved r0 in stack
@@ -199,9 +204,6 @@ void do_sys_yield(uint32_t* sp) // Points on saved r0 in stack
 
 	// Elects new current process
 	elect();
-	if(scheduling_type == DYNAMIC_PRIORITIES) {
-		update_priorities();
-	}
 
 	// Update context which will be reloaded
 	for (i = 0; i < NBREG; ++i)
