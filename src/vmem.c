@@ -16,6 +16,10 @@
  
 // 0b000001110011 
 
+/* FLAGS */
+static const uint32_t DEVICE_FLAGS = 0b010000010110;
+static const uint32_t KERNEL_FLAGS = 0b000001010010;
+static const uint32_t FIRST_LEVEL_FLAGS = 0b0000000001;
 
 // Page table address
 static unsigned int MMUTABLEBASE;
@@ -33,10 +37,16 @@ void vmem_init()
 	MMUTABLEBASE = init_kern_translation_table();
 	frames_occupation_table = init_frames_occupation_table();
 	
+	//config MMU
 	configure_mmu_C();
+	//active MMU
+	vmem_translate(32768, NULL);
+	vmem_translate(0x1000001, NULL);
+	start_mmu_C();
+
 	//__asm("cps 0b10111");//Activate data abort and interruptions : bit 7-8 of cpsr
 	//TODO Later
-	start_mmu_C();
+	
 }
 
 
@@ -45,67 +55,71 @@ void vmem_init()
 **************************************************************************/
 unsigned int init_kern_translation_table(void)
 {
-	// allocate first level table
-	uint32_t** first_level_table = (uint32_t**) kAlloc_aligned(FIRST_LVL_TT_SIZE, FIRST_LVL_TT_ALIG);
-	// second level table
-	uint32_t* second_level_table;
-	
-	// allocate second level table
-	uint8_t i;
-	for(i = 0; i < SECON_LVL_TT_COUN; i++)
-	{
-		first_level_table[i] = (uint32_t*) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG);
-	}
-	
-	//9.2
-	uint32_t device_flags = 0b010000010110;
-	
-	uint32_t virtual_addr;
-	
-	// initialise memoire noyau
-	for (virtual_addr = 0; virtual_addr < 0x1000000; virtual_addr++) // TODO 0x1000000 ==? __kernel_heap_end__
-	{
-		virtual_physical_mirror(virtual_addr, (uint32_t)first_level_table, second_level_table, 0b000001010010);
-	}
-	
-	// initialise memoire peripherique
-	for(virtual_addr = 0x20000000; virtual_addr < 0x20FFFFFF; virtual_addr++)
-	{
-		virtual_physical_mirror(virtual_addr, (uint32_t)first_level_table, second_level_table, device_flags);
-	}
-	return (unsigned int)first_level_table;
-}
 
+	/* **** Constants **** */
+	const uint8_t FIRST_LVL_IDX_BEGIN = 20;
+	const uint8_t SECOND_LVL_IDX_BEGIN = 12;
+	const uint8_t SECOND_LVL_IDX_LEN = 0xFF;
+	
+	const uint32_t SECOND_LVL_ADDR_MASK = 0xFFFFFC00; // last 10 bits to 0
 
-void virtual_physical_mirror(uint32_t virtual_addr, uint32_t first_level_table, uint32_t* second_level_table, uint32_t flags) {
-	// Indexes
-	uint32_t first_level_table_index;
-	uint32_t second_level_table_index;
-	// Desc
-	uint32_t first_level_descriptor;
+	const uint8_t nb_tables_kernel_device = (__kernel_heap_end__ / (PAGE_SIZE * SECON_LVL_TT_COUN)) + 1; // For kernel & device, we have 0xFFFFFF addresse to store, 16 = 0xFFFFFF / (RAME_SIZE[4096] * SECON_LVL_TT_COUN[256])
+	const uint16_t device_address_page_table_idx_start = 0x20000000 >> 20;
+	const uint16_t device_address_page_table_idx_end = (0x20000000 >> 20) + 16;
+	// Alloc page table
+	uint32_t** page_table = (uint32_t**) kAlloc_aligned(FIRST_LVL_TT_SIZE, FIRST_LVL_TT_ALIG);
+	// Put kern and devices pages for all processes or for kernel
 	uint32_t* first_level_descriptor_address;
-	//uint32_t second_level_descriptor;
 	uint32_t* second_level_descriptor_address;
+	uint32_t first_lvl_idx, first_lvl_desc, second_lvl_idx;
+	uint32_t log_addr, i;
 	
-	//Decalage de 20 bits pour recuperer first_level_table_index
-	first_level_table_index = virtual_addr >> 20;
-	//Construction du first_level_descriptor_address par concatenation, ajout de 00 a la fin
-	first_level_descriptor_address = (uint32_t*) ((uint32_t)first_level_table | (first_level_table_index << 2));
-	
-	first_level_descriptor = *(first_level_descriptor_address);
-	
-	// On recupere second_level_table_index
-	// Decalage de 12 bits pour retirer page index
-	// Puis masque de 8 bits pour retirer first_level_table_index
-	second_level_table_index = (virtual_addr >> 12) & 0xFF;
-	// Masque pour recuperer les 22 premiers bits de first_level_table
-	second_level_table = (uint32_t*)(first_level_descriptor & 0xFFFFFC00);
-	// Construction de second_level_descriptor_address
-	second_level_descriptor_address = (uint32_t*) ((uint32_t)second_level_table | (second_level_table_index << 2));
-	// Construction de second_level_descriptor pour que virtual_addr == physical_addr
-	*second_level_descriptor_address = (virtual_addr & 0xFFFFF000) | flags;
-}
+	// ** Init kernel pages
+	// Alloc table pages for kernel (from 0 to 0xffffff (kernel_heap_end, included))
+	for(i = 0; i < nb_tables_kernel_device; i++)
+	{
+		first_level_descriptor_address = (uint32_t*) ((uint32_t)page_table | (i << 2));
+		(*first_level_descriptor_address) = (uint32_t) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG) | FIRST_LEVEL_FLAGS;
+	}
+	// Fill second level tables for kernel
+	for (log_addr = 0; log_addr < __kernel_heap_end__; log_addr += PAGE_SIZE)
+	{
+		first_lvl_idx = log_addr >> FIRST_LVL_IDX_BEGIN;
+		first_level_descriptor_address = (uint32_t*) ((uint32_t)page_table | (first_lvl_idx << 2));
 
+		first_lvl_desc = (*first_level_descriptor_address) & SECOND_LVL_ADDR_MASK;
+		second_lvl_idx = (log_addr >> SECOND_LVL_IDX_BEGIN) & SECOND_LVL_IDX_LEN;
+
+		second_level_descriptor_address = (uint32_t*) (first_lvl_desc | (second_lvl_idx << 2));
+
+        *second_level_descriptor_address = (log_addr & 0xFFFFF000) | KERNEL_FLAGS;
+	}
+	
+		
+	// ** Init devices pages
+	// Alloc table pages for devices (from 0x20000000 to 0x20ffffff)
+	for(i = device_address_page_table_idx_start; i < device_address_page_table_idx_end; i++) 
+	{
+		first_level_descriptor_address = (uint32_t*) ((uint32_t)page_table | (i << 2));
+		(*first_level_descriptor_address) = (uint32_t) kAlloc_aligned(SECON_LVL_TT_SIZE, SECON_LVL_TT_ALIG) | FIRST_LEVEL_FLAGS;
+	}
+	// Fill second level tables for devices I/O
+	for(log_addr = 0x20000000; log_addr < 0x20FFFFFF; log_addr += PAGE_SIZE)
+    {
+        first_lvl_idx = log_addr >> FIRST_LVL_IDX_BEGIN;
+		first_level_descriptor_address = (uint32_t*) ((uint32_t)page_table | (first_lvl_idx << 2));
+
+		first_lvl_desc = (*first_level_descriptor_address) & SECOND_LVL_ADDR_MASK;
+		second_lvl_idx = (log_addr >> SECOND_LVL_IDX_BEGIN) & SECOND_LVL_IDX_LEN;
+
+		second_level_descriptor_address = (uint32_t*) (first_lvl_desc | (second_lvl_idx << 2));
+
+        *second_level_descriptor_address = (log_addr & 0xFFFFF000) | DEVICE_FLAGS;
+    }
+	
+	return (unsigned int)page_table;
+	
+}
 
 
 /**

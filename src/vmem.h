@@ -42,8 +42,6 @@ extern uint32_t __kernel_heap_end__;
 void vmem_init();
 
 unsigned int init_kern_translation_table();
-void virtual_physical_mirror(uint32_t virtual_addr, uint32_t first_level_table, uint32_t* second_level_table, uint32_t flags);
-
 
 
 /**
