@@ -51,10 +51,13 @@ void vmem_init()
 
 	//__asm("cps 0b10111");//Activate data abort and interruptions : bit 7-8 of cpsr
 	//TODO Later
-	uint32_t occ = get_frame_state(2000);
-	occ = get_frame_state(50000);
-	occ = get_frame_state(133000);
-	vmem_translate(occ, NULL);
+	uint32_t f = find_available_frame();
+	f = f*FRAME_SIZE;
+	
+	uint32_t* li = list_available_frames(3);
+	uint32_t frame_i = 0;
+	frame_i = frame_i;
+	li = li;
 }
 
 
@@ -194,19 +197,19 @@ uint32_t find_contiguous_pages(uint32_t* page_table, uint32_t nb_page)
 		second_level_index = page_i - first_level_index * SECON_LVL_TT_COUN;
 
 		if (is_available(page_table, first_level_index, second_level_index))
-        {
-            current_contiguous_pages++;
-        }
-        else
-        {
-            current_contiguous_pages = 0;
-        }
+		{
+		    current_contiguous_pages++;
+		}
+		else
+		{
+		    current_contiguous_pages = 0;
+		}
 
-        // On a le bon espace contigu
-        if (current_contiguous_pages >= nb_page)
-        {
-            return page_i + 1 - nb_page;
-        }
+		// On a le bon espace contigu
+		if (current_contiguous_pages >= nb_page)
+		{
+		    return page_i + 1 - nb_page;
+		}
 	}
 
 	// Il est impossible de trouver un tel espace !
@@ -425,13 +428,19 @@ uint32_t* list_available_frames(uint32_t nb_page)
 		{
 			// frame dispo !
 			frame_available_list [frame_i] = frame;
+			// On indique que la frame est maintenant occupée
+			set_frame_state(frame, 1);
 		}
 		else
 		{
 			// NO MORE RAM
+			for(; frame_i >= 0; --frame_i)
+			{
+				// On indique que la frame est maintenant libre
+				set_frame_state(frame_available_list[frame_i], 0);
+			}
 			kFree((uint8_t*)frame_available_list, nb_page);
 			return NULL;
-			
 		}
 	}
 	return frame_available_list;
