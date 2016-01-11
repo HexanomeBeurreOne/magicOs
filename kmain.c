@@ -33,6 +33,7 @@ void user_process_2()
 	}
 }
 
+
 void user_process_3()
 {
 	int v3 = 0;
@@ -46,6 +47,14 @@ void user_process_3()
 		}
 	}
 }
+
+
+void test_led()
+{
+	hw_init();
+	led_on();
+}
+
 
 void kmain()
 {
