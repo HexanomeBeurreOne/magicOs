@@ -27,7 +27,6 @@ void user_process_2()
 
 void test_led_on()
 {
-	hw_init();
 	led_on();
 }
 
@@ -108,9 +107,9 @@ void test_clavier()
 
 void kmain()
 {
-
 	hw_init();
-	led_blink();
+
+   led_blink();
 	sched_init();
 	
 	

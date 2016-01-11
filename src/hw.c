@@ -124,13 +124,13 @@ led_init(void)
 void
 led_blink(void)
 {
-    int i =0;
+    int i = 0;
     int waiting = 0;
-    for (i = 0; i < 100; i++) {
+    for (i = 0; i < 10; i++) {
         led_on();
-        for (waiting = 0; waiting < 1000; waiting++);
+        for (waiting = 0; waiting < 1000*5000; waiting++);
         led_off();
-        for (waiting = 0; waiting < 1000; waiting++);                
+        for (waiting = 0; waiting < 1000*5000; waiting++);                
     }
 }
 
