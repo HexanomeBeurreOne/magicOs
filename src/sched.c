@@ -15,7 +15,7 @@ static struct pcb_s kmain_process;
 void sched_init()
 {
 	//9.6 Appel vnem_init 
-	#if VNEM
+	#if VMEM
 		vnem_init();
 	#else
 		kheap_init();
