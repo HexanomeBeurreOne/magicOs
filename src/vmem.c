@@ -183,18 +183,18 @@ uint32_t* get_second_level_page_table(uint32_t* page_table, uint32_t fl_index)
 */
 uint32_t find_contiguous_pages(uint32_t* page_table, uint32_t nb_page)
 {
-	const uint32_t MAX_PAGE = UINT32_MAX / PAGE_SIZE;
+	const uint32_t MAX_PAGE = 0x1FFFFFF;
 
 	uint32_t current_contiguous_pages = 0;
 
 	uint32_t first_level_index;
 	uint32_t second_level_index;
 
-	for (int page_i = 0; page_i < MAX_PAGE; ++page_i)
+	for (int page_i = 0x1000000; page_i < MAX_PAGE; page_i+=PAGE_SIZE)
 	{
 		// On récupère les indexes
-		first_level_index = page_i / SECON_LVL_TT_COUN;
-		second_level_index = page_i - first_level_index * SECON_LVL_TT_COUN;
+		first_level_index = (page_i >> 20);
+		second_level_index = ((page_i << 12) >> 24);
 
 		if (is_available(page_table, first_level_index, second_level_index))
 		{
